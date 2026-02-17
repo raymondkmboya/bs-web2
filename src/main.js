@@ -1,4 +1,6 @@
 import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import { useAuthStore } from '@/stores/auth';
 import App from './App.vue';
 import router from './router';
 
@@ -11,7 +13,9 @@ import '@/assets/tailwind.css';
 import '@/assets/styles.scss';
 
 const app = createApp(App);
+const pinia = createPinia();
 
+app.use(pinia);
 app.use(router);
 app.use(PrimeVue, {
     theme: {
@@ -24,4 +28,8 @@ app.use(PrimeVue, {
 app.use(ToastService);
 app.use(ConfirmationService);
 
+// Initialize auth store after app is mounted
 app.mount('#app');
+
+const authStore = useAuthStore();
+authStore.initAuth();

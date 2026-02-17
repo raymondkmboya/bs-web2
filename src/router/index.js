@@ -1,5 +1,6 @@
 import AppLayout from '@/layout/AppLayout.vue';
 import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -108,6 +109,100 @@ const router = createRouter({
                     component: () => import('@/views/pages/Crud.vue')
                 },
                 {
+                    path: '/students/registration',
+                    name: 'student-registration',
+                    component: () => import('@/views/students/Registration.vue')
+                },
+                {
+                    path: '/students/admission',
+                    name: 'student-admission',
+                    component: () => import('@/views/students/Admission.vue')
+                },
+                {
+                    path: '/students/profile/:id',
+                    name: 'student-profile',
+                    component: () => import('@/views/students/StudentProfile.vue')
+                },
+                {
+                    path: '/front-office/enquiry',
+                    name: 'front-office-enquiry',
+                    component: () => import('@/views/frontoffice/Enquiry.vue')
+                },
+                {
+                    path: '/front-office/front-office',
+                    name: 'front-office-management',
+                    component: () => import('@/views/frontoffice/FrontOffice.vue')
+                },
+                {
+                    path: '/front-office/adverts',
+                    name: 'front-office-advert',
+                    component: () => import('@/views/frontoffice/Advert.vue')
+                },
+                {
+                    path: '/fees/management',
+                    name: 'fee-management',
+                    component: () => import('@/views/fees/FeeManagement.vue')
+                },
+                {
+                    path: '/fees/collections',
+                    name: 'fee-collections',
+                    component: () => import('@/views/fees/FeeCollections.vue')
+                },
+                {
+                    path: '/academics/class-management',
+                    name: 'class-management',
+                    component: () => import('@/views/academics/ClassManagement.vue')
+                },
+                {
+                    path: '/academics/subjects-management',
+                    name: 'subjects-management',
+                    component: () => import('@/views/academics/SubjectsManagement.vue')
+                },
+                {
+                    path: '/academics/timetable',
+                    name: 'timetable',
+                    component: () => import('@/views/academics/Timetable.vue')
+                },
+                {
+                    path: '/academics/assessment',
+                    name: 'assessment',
+                    component: () => import('@/views/academics/Assessment.vue')
+                },
+                {
+                    path: '/administration/human-resources',
+                    name: 'human-resources',
+                    component: () => import('@/views/administration/HumanResources.vue')
+                },
+                {
+                    path: '/administration/users',
+                    name: 'administration-users',
+                    component: () => import('@/views/administration/Users.vue')
+                },
+                {
+                    path: '/administration/settings',
+                    name: 'administration-settings',
+                    component: () => import('@/views/administration/Settings.vue')
+                },
+                {
+                    path: '/administration/audit',
+                    name: 'administration-audit',
+                    component: () => import('@/views/administration/AuditLogs.vue')
+                },
+                {
+                    path: '/students/attendance',
+                    name: 'students-attendance',
+                    component: () => import('@/views/students/Attendance.vue')
+                },
+                {
+                    path: '/students/register',
+                    name: 'students-register',
+                    component: () => import('@/views/students/Register.vue')
+                },
+                {
+                    path: '/compass',
+                    redirect: '/academics/class-management'
+                },
+                {
                     path: '/start/documentation',
                     name: 'documentation',
                     component: () => import('@/views/pages/Documentation.vue')
@@ -128,7 +223,7 @@ const router = createRouter({
         {
             path: '/auth/login',
             name: 'login',
-            component: () => import('@/views/pages/auth/Login.vue')
+            component: () => import('@/views/Login.vue')
         },
         {
             path: '/auth/access',
@@ -141,6 +236,36 @@ const router = createRouter({
             component: () => import('@/views/pages/auth/Error.vue')
         }
     ]
+});
+router.beforeEach(async (to, from, next) => {
+    const authStore = useAuthStore();
+
+    // Routes that don't require authentication
+    const publicRoutes = ['login', 'landing', 'notfound', 'accessDenied', 'error'];
+
+    if (publicRoutes.includes(to.name)) {
+        // If user is already authenticated and trying to access login, redirect to dashboard
+        if (to.name === 'login' && authStore.isLoggedIn) {
+            next('/');
+        } else {
+            next();
+        }
+    } else {
+        // Protected routes - require authentication
+        if (authStore.isLoggedIn) {
+            next();
+        } else {
+            // Try to initialize auth from localStorage
+            await authStore.initAuth();
+
+            // Check again after initialization
+            if (authStore.isLoggedIn) {
+                next();
+            } else {
+                next('/auth/login');
+            }
+        }
+    }
 });
 
 export default router;

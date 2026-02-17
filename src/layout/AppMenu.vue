@@ -14,248 +14,147 @@ const model = ref([
         ]
     },
     {
-        label: 'UI Components',
-        path: '/uikit',
+        label: 'Student Management',
+        icon: 'pi pi-fw pi-users',
+        path: '/students',
         items: [
             {
-                label: 'Form Layout',
-                icon: 'pi pi-fw pi-id-card',
-                to: '/uikit/formlayout'
+                label: 'Student Registration',
+                icon: 'pi pi-fw pi-user-plus',
+                to: '/students/registration',
+                description: 'Register new students for admission'
             },
             {
-                label: 'Input',
-                icon: 'pi pi-fw pi-check-square',
-                to: '/uikit/input'
+                label: 'Student Admission',
+                icon: 'pi pi-fw pi-check-circle',
+                to: '/students/admission',
+                description: 'Manage student admission process'
             },
             {
-                label: 'Button',
-                icon: 'pi pi-fw pi-mobile',
-                to: '/uikit/button',
-                class: 'rotated-icon'
-            },
-            {
-                label: 'Table',
-                icon: 'pi pi-fw pi-table',
-                to: '/uikit/table'
-            },
-            {
-                label: 'List',
+                label: 'Student Attendance',
                 icon: 'pi pi-fw pi-list',
-                to: '/uikit/list'
+                to: '/students/attendance',
+                description: 'Track and manage student attendance'
             },
-            {
-                label: 'Tree',
-                icon: 'pi pi-fw pi-share-alt',
-                to: '/uikit/tree'
-            },
-            {
-                label: 'Panel',
-                icon: 'pi pi-fw pi-tablet',
-                to: '/uikit/panel'
-            },
-            {
-                label: 'Overlay',
-                icon: 'pi pi-fw pi-clone',
-                to: '/uikit/overlay'
-            },
-            {
-                label: 'Media',
-                icon: 'pi pi-fw pi-image',
-                to: '/uikit/media'
-            },
-            {
-                label: 'Menu',
-                icon: 'pi pi-fw pi-bars',
-                to: '/uikit/menu'
-            },
-            {
-                label: 'Message',
-                icon: 'pi pi-fw pi-comment',
-                to: '/uikit/message'
-            },
-            {
-                label: 'File',
-                icon: 'pi pi-fw pi-file',
-                to: '/uikit/file'
-            },
-            {
-                label: 'Chart',
-                icon: 'pi pi-fw pi-chart-bar',
-                to: '/uikit/charts'
-            },
-            {
-                label: 'Timeline',
-                icon: 'pi pi-fw pi-calendar',
-                to: '/uikit/timeline'
-            },
-            {
-                label: 'Misc',
-                icon: 'pi pi-fw pi-circle',
-                to: '/uikit/misc'
-            }
+            // {
+            //     label: 'Student Register',
+            //     icon: 'pi pi-fw pi-book',
+            //     to: '/students/register',
+            //     description: 'View and manage student register'
+            // },
+            // {
+            //     label: 'Student Profile',
+            //     icon: 'pi pi-fw pi-id-card',
+            //     to: '/students/profile',
+            //     description: 'View individual student profiles'
+            // }
         ]
     },
     {
-        label: 'Prime Blocks',
-        icon: 'pi pi-fw pi-prime',
-        path: '/blocks',
-        items: [
-            {
-                label: 'Free Blocks',
-                icon: 'pi pi-fw pi-eye',
-                to: '/blocks/free'
-            },
-            {
-                label: 'All Blocks',
-                icon: 'pi pi-fw pi-globe',
-                url: 'https://blocks.primevue.org/',
-                target: '_blank'
-            }
-        ]
-    },
-    {
-        label: 'Pages',
+        label: 'Front Office',
         icon: 'pi pi-fw pi-briefcase',
-        path: '/pages',
+        path: '/front-office',
         items: [
             {
-                label: 'Landing',
-                icon: 'pi pi-fw pi-globe',
-                to: '/landing'
+                label: 'Enquiries',
+                icon: 'pi pi-fw pi-search',
+                to: '/front-office/enquiry',
+                description: 'Manage prospective student leads and follow-ups'
             },
             {
-                label: 'Auth',
-                icon: 'pi pi-fw pi-user',
-                path: '/auth',
-                items: [
-                    {
-                        label: 'Login',
-                        icon: 'pi pi-fw pi-sign-in',
-                        to: '/auth/login'
-                    },
-                    {
-                        label: 'Error',
-                        icon: 'pi pi-fw pi-times-circle',
-                        to: '/auth/error'
-                    },
-                    {
-                        label: 'Access Denied',
-                        icon: 'pi pi-fw pi-lock',
-                        to: '/auth/access'
-                    }
-                ]
+                label: 'Adverts',
+                icon: 'pi pi-fw pi-id-card',
+                to: '/front-office/adverts',
+                description: 'Manage school advertisements and promotions'
             },
             {
-                label: 'Crud',
-                icon: 'pi pi-fw pi-pencil',
-                to: '/pages/crud'
-            },
-            {
-                label: 'Not Found',
-                icon: 'pi pi-fw pi-exclamation-circle',
-                to: '/pages/notfound'
-            },
-            {
-                label: 'Empty',
-                icon: 'pi pi-fw pi-circle-off',
-                to: '/pages/empty'
+                label: 'Front Office Management',
+                icon: 'pi pi-fw pi-users',
+                to: '/front-office/front-office',
+                description: 'Manage visitors, postal dispatch, and appointments'
             }
         ]
     },
     {
-        label: 'Hierarchy',
-        icon: 'pi pi-fw pi-align-left',
-        path: '/hierarchy',
+        label: 'Academics',
+        icon: 'pi pi-fw pi-graduation-cap', // Changed to graduation cap for academic context
+        path: '/academics',
         items: [
             {
-                label: 'Submenu 1',
-                icon: 'pi pi-fw pi-align-left',
-                path: '/submenu_1',
-                items: [
-                    {
-                        label: 'Submenu 1.1',
-                        icon: 'pi pi-fw pi-align-left',
-                        path: '/submenu_1_1',
-                        items: [
-                            {
-                                label: 'Submenu 1.1.1',
-                                icon: 'pi pi-fw pi-align-left'
-                            },
-                            {
-                                label: 'Submenu 1.1.2',
-                                icon: 'pi pi-fw pi-align-left'
-                            },
-                            {
-                                label: 'Submenu 1.1.3',
-                                icon: 'pi pi-fw pi-align-left'
-                            }
-                        ]
-                    },
-                    {
-                        label: 'Submenu 1.2',
-                        icon: 'pi pi-fw pi-align-left',
-                        path: '/submenu_1_2',
-                        items: [
-                            {
-                                label: 'Submenu 1.2.1',
-                                icon: 'pi pi-fw pi-align-left'
-                            }
-                        ]
-                    }
-                ]
+                label: 'Class Management',
+                icon: 'pi pi-fw pi-sitemap', // Visualizes hierarchy
+                to: '/academics/class-management',
+                description: 'Manage academic levels, streams, classrooms, and class teachers'
             },
             {
-                label: 'Submenu 2',
-                icon: 'pi pi-fw pi-align-left',
-                path: '/submenu_2',
-                items: [
-                    {
-                        label: 'Submenu 2.1',
-                        icon: 'pi pi-fw pi-align-left',
-                        path: '/submenu_2_1',
-                        items: [
-                            {
-                                label: 'Submenu 2.1.1',
-                                icon: 'pi pi-fw pi-align-left'
-                            },
-                            {
-                                label: 'Submenu 2.1.2',
-                                icon: 'pi pi-fw pi-align-left'
-                            }
-                        ]
-                    },
-                    {
-                        label: 'Submenu 2.2',
-                        icon: 'pi pi-fw pi-align-left',
-                        path: '/submenu_2_2',
-                        items: [
-                            {
-                                label: 'Submenu 2.2.1',
-                                icon: 'pi pi-fw pi-align-left'
-                            }
-                        ]
-                    }
-                ]
+                label: 'Subjects Management',
+                icon: 'pi pi-fw pi-book', // Book icon for subjects
+                to: '/academics/subjects-management',
+                description: 'Manage academic subjects and subject teacher assignments'
+            },
+            {
+                label: 'Timetable',
+                icon: 'pi pi-fw pi-calendar-clock', // Specific to scheduling
+                to: '/academics/timetable'
+            },
+            {
+                label: 'Assessments',
+                icon: 'pi pi-fw pi-copy', // Grouping exams and grading
+                to: '/academics/assessment',
+                description: 'Manage examinations, results, and grading systems'
+            },
+        ]
+    },
+    {
+        label: 'Fees',
+        icon: 'pi pi-fw pi-money-bill',
+        path: '/fees',
+        items: [
+            {
+                label: 'Fee Management',
+                icon: 'pi pi-fw pi-cog',
+                to: '/fees/management',
+                description: 'Manage fee groups and allocations'
+            },
+            {
+                label: 'Fee Collections',
+                icon: 'pi pi-fw pi-wallet',
+                to: '/fees/collections',
+                description: 'Track fee payments and collections'
             }
         ]
     },
     {
-        label: 'Get Started',
-        path: '/start',
+        label: 'Administration',
+        icon: 'pi pi-fw pi-cog',
+        path: '/administration',
         items: [
             {
-                label: 'Documentation',
-                icon: 'pi pi-fw pi-book',
-                to: '/start/documentation'
+                label: 'Human Resources',
+                icon: 'pi pi-fw pi-users',
+                to: '/administration/human-resources',
+                description: 'Manage staff, departments, attendance, and leave records'
             },
             {
-                label: 'View Source',
-                icon: 'pi pi-fw pi-github',
-                url: 'https://github.com/primefaces/sakai-vue',
-                target: '_blank'
+                label: 'Users & Permissions',
+                icon: 'pi pi-fw pi-user-edit',
+                to: '/administration/users',
+                description: 'Manage user accounts and system permissions'
+            },
+            {
+                label: 'System Settings',
+                icon: 'pi pi-fw pi-cog',
+                to: '/administration/settings',
+                description: 'Configure system settings and preferences'
+            },
+            {
+                label: 'Audit Logs',
+                icon: 'pi pi-fw pi-history',
+                to: '/administration/audit',
+                description: 'View system activity and audit logs'
             }
         ]
-    }
+    },
 ]);
 </script>
 
