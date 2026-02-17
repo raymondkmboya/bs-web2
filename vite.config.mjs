@@ -29,5 +29,13 @@ export default defineConfig({
                 api: 'modern-compiler'
             }
         }
+    },
+    // Environment-specific configuration
+    define: {
+        __API_URL__: JSON.stringify(
+            process.env.NODE_ENV === 'production'
+                ? 'https://bs-api2.hub.vannahadvisory.com/api'
+                : 'http://localhost:8080/api'
+        )
     }
 });

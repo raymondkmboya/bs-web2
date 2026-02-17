@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { API_BASE_URL } from '@/config/api';
 
-const BASE_URL = 'http://localhost:8080/api/academics'; // Replace with your backend URL
+const BASE_URL = `${API_BASE_URL}/academics`; // Use centralized API config
 
 class AcademicService {
 
