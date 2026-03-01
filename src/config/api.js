@@ -6,7 +6,7 @@ const API_CONFIG = {
     },
     // Production environment
     production: {
-        BASE_URL: 'https://bs-api2.hub.vannahadvisory.com/api'
+        BASE_URL: 'http://194.195.116.252:8080/api'
     }
 };
 
