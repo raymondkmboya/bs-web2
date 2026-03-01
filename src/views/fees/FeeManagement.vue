@@ -1,14 +1,14 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import RegistrationService from '@/services/RegistrationService.js';
+import PaymentService from '@/service/PaymentService.js';
 import FeeGroupsTable from '@/components/fees/FeeGroupsTable.vue';
-import FeeAllocationTable from '@/components/fees/FeeAllocationTable.vue';
+import FeeStructureTable from '@/components/fees/FeeStructureTable.vue';
 import FeeGroupDialog from '@/components/fees/FeeGroupDialog.vue';
 import FeeAllocationDialog from '@/components/fees/FeeAllocationDialog.vue';
 
 const activeTab = ref(0);
 const feeGroups = ref([]);
-const feeAllocations = ref([]);
+const feeStructures = ref([]);
 const streams = ref([]);
 const loading = ref(false);
 const showGroupDialog = ref(false);
@@ -88,9 +88,9 @@ function closeGroupDialog() {
 
 function handleSaveGroup(groupData) {
     if (editingGroup.value) {
-        RegistrationService.updateFeeGroup(editingGroup.value.id, groupData);
+        PaymentService.updateFeeGroup(editingGroup.value.id, groupData);
     } else {
-        RegistrationService.createFeeGroup(groupData);
+        PaymentService.createFeeGroup(groupData);
     }
 
     loadFeeGroups();
@@ -100,7 +100,7 @@ function handleSaveGroup(groupData) {
 async function deleteGroup(group) {
     if (confirm(`Are you sure you want to delete "${group.name}"?`)) {
         loading.value = true;
-        await RegistrationService.deleteFeeGroup(group.id);
+        await PaymentService.deleteFeeGroup(group.id);
         await loadFeeGroups();
         loading.value = false;
     }
@@ -141,7 +141,8 @@ async function deleteAllocation(allocation) {
 async function loadFeeGroups() {
     try {
         loading.value = true;
-        feeGroups.value = await RegistrationService.getFeeGroups();
+        const response = await PaymentService.getFeeGroups();
+        feeGroups.value = response.data || response;
     } catch (error) {
         console.error('Failed to load fee groups:', error);
     } finally {
@@ -149,10 +150,11 @@ async function loadFeeGroups() {
     }
 }
 
-async function loadFeeAllocations() {
+async function loadFeeStructures() {
     try {
         loading.value = true;
-        feeAllocations.value = await RegistrationService.getFeeAllocations();
+        feeStructures.value = await PaymentService.getFeeStructures();
+        console.log(feeStructures.value);
     } catch (error) {
         console.error('Failed to load fee allocations:', error);
     } finally {
@@ -162,7 +164,16 @@ async function loadFeeAllocations() {
 
 async function loadDropdownData() {
     try {
-        streams.value = await RegistrationService.getStreams();
+        // For now, we'll use mock data for streams since there's no streams endpoint
+        // You can add streams endpoint to backend later
+        streams.value = [
+            { label: 'Form 1', value: 'Form 1' },
+            { label: 'Form 2', value: 'Form 2' },
+            { label: 'Form 3', value: 'Form 3' },
+            { label: 'Form 4', value: 'Form 4' },
+            { label: 'Form 5', value: 'Form 5' },
+            { label: 'Form 6', value: 'Form 6' }
+        ];
     } catch (error) {
         console.error('Failed to load dropdown data:', error);
     }
@@ -192,8 +203,8 @@ function formatCurrency(amount) {
 
 onMounted(() => {
     loadFeeGroups();
-    loadFeeAllocations();
-    loadDropdownData();
+    loadFeeStructures();
+    // loadDropdownData();
 });
 </script>
 
@@ -207,7 +218,7 @@ onMounted(() => {
         <TabView v-model:activeIndex="activeTab">
             <!-- Fee Groups Tab -->
             <TabPanel header="Fee Groups">
-                <div class="flex justify-content-between align-items-center mb-4">
+                <div class="flex justify-between items-center mb-4">
                     <div>
                         <h6 class="mb-1">Fee Categories</h6>
                         <span class="text-600 text-sm">Manage fee categories like tuition, exam fees, etc.</span>
@@ -235,11 +246,11 @@ onMounted(() => {
             </TabPanel>
 
             <!-- Fee Allocation Tab -->
-            <TabPanel header="Fee Allocation">
-                <div class="flex justify-content-between align-items-center mb-4">
+            <TabPanel header="Fee Structure">
+                <div class="flex justify-between items-center mb-4">
                     <div>
-                        <h6 class="mb-1">Stream Fee Configuration</h6>
-                        <span class="text-600 text-sm">Allocate fees to different streams (CSEE Arts, Science, etc.)</span>
+                        <h6 class="mb-1">Class Level Fee Configuration</h6>
+                        <span class="text-600 text-sm">Configure fees for different classes</span>
                     </div>
                     <Button
                         label="Add Allocation"
@@ -251,8 +262,8 @@ onMounted(() => {
                 </div>
 
                 <!-- Fee Allocation Table Component -->
-                <FeeAllocationTable
-                    :fee-allocations="feeAllocations"
+                <FeeStructureTable
+                    :feeStructures = "feeStructures"
                     :loading="loading"
                     :filters="allocationFilters"
                     :global-filter-fields="allocationGlobalFilterFields"

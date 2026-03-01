@@ -39,7 +39,7 @@ function formatNumber(num) {
         showGridlines
     >
         <template #header>
-            <div class="flex justify-content-between">
+            <div class="flex justify-between">
                 <Button 
                     type="button" 
                     icon="pi pi-filter-slash" 
@@ -54,43 +54,33 @@ function formatNumber(num) {
             </div>
         </template>
 
-        <Column field="name" header="Subject Name" sortable>
+        <Column field="subject_name" header="Subject Name" sortable>
             <template #body="{ data }">
                 <div class="flex align-items-center">
                     <i class="pi pi-book mr-2"></i>
                     <div>
-                        <span class="font-semibold">{{ data.name }}</span>
-                        <div class="text-600 text-sm">{{ data.code }}</div>
+                        <span class="font-semibold">{{ data.subject_name }}</span>
+                        <div class="text-600 text-sm">{{ data.subject_code }}</div>
                     </div>
                 </div>
             </template>
         </Column>
 
-        <Column field="category" header="Category" sortable>
-            <template #body="{ data }">
-                <Tag 
-                    :value="data.category" 
-                    :severity="getCategorySeverity(data.category)"
-                />
-            </template>
-        </Column>
-
-        <Column field="totalClasses" header="Classes" sortable>
+        <Column field="class_level.class_level_name" header="Class Level" sortable>
             <template #body="{ data }">
                 <div class="flex align-items-center">
                     <i class="pi pi-sitemap mr-2"></i>
-                    <span class="font-semibold">{{ data.totalClasses }}</span>
-                    <span class="text-600 text-sm ml-1">classes</span>
+                    <span class="font-semibold">{{ data.class_level.class_level_name }}</span>
                 </div>
             </template>
         </Column>
 
-        <Column field="totalStudents" header="Total Students" sortable>
+        <Column field="students_count" header="Total Students" sortable>
             <template #body="{ data }">
                 <div class="flex align-items-center">
                     <i class="pi pi-users mr-2"></i>
                     <Tag 
-                        :value="formatNumber(data.totalStudents)" 
+                        :value="formatNumber(data.students_count)" 
                         severity="info"
                         class="mr-2"
                     />
@@ -103,18 +93,7 @@ function formatNumber(num) {
             <template #body="{ data }">
                 <div class="flex align-items-center">
                     <i class="pi pi-user-edit mr-2"></i>
-                    <span class="font-semibold">{{ data.teachers }}</span>
-                    <span class="text-600 text-sm ml-1">teachers</span>
-                </div>
-            </template>
-        </Column>
-
-        <Column field="avgStudentsPerTeacher" header="Avg/Teacher" sortable>
-            <template #body="{ data }">
-                <div class="text-center">
-                    <span class="font-bold text-blue-600">
-                        {{ Math.round(data.totalStudents / data.teachers) }}
-                    </span>
+                    <span class="font-semibold">{{ data.subject_teacher.first_name }} {{ data.subject_teacher.last_name }}</span>
                 </div>
             </template>
         </Column>

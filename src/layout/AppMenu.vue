@@ -19,35 +19,29 @@ const model = ref([
         path: '/students',
         items: [
             {
-                label: 'Student Registration',
+                label: 'Registration',
                 icon: 'pi pi-fw pi-user-plus',
                 to: '/students/registration',
                 description: 'Register new students for admission'
             },
+            // {
+            //     label: 'Follow up',
+            //     icon: 'pi pi-fw pi-book',
+            //     to: '/students/follow-up',
+            //     description: 'Manage student follow-ups'
+            // },
             {
-                label: 'Student Admission',
+                label: 'Admission',
                 icon: 'pi pi-fw pi-check-circle',
                 to: '/students/admission',
                 description: 'Manage student admission process'
             },
             {
-                label: 'Student Attendance',
+                label: 'Attendance',
                 icon: 'pi pi-fw pi-list',
                 to: '/students/attendance',
                 description: 'Track and manage student attendance'
             },
-            // {
-            //     label: 'Student Register',
-            //     icon: 'pi pi-fw pi-book',
-            //     to: '/students/register',
-            //     description: 'View and manage student register'
-            // },
-            // {
-            //     label: 'Student Profile',
-            //     icon: 'pi pi-fw pi-id-card',
-            //     to: '/students/profile',
-            //     description: 'View individual student profiles'
-            // }
         ]
     },
     {
@@ -68,7 +62,7 @@ const model = ref([
                 description: 'Manage school advertisements and promotions'
             },
             {
-                label: 'Front Office Management',
+                label: 'Reception',
                 icon: 'pi pi-fw pi-users',
                 to: '/front-office/front-office',
                 description: 'Manage visitors, postal dispatch, and appointments'
@@ -81,13 +75,13 @@ const model = ref([
         path: '/academics',
         items: [
             {
-                label: 'Class Management',
+                label: 'Classes',
                 icon: 'pi pi-fw pi-sitemap', // Visualizes hierarchy
                 to: '/academics/class-management',
                 description: 'Manage academic levels, streams, classrooms, and class teachers'
             },
             {
-                label: 'Subjects Management',
+                label: 'Subjects',
                 icon: 'pi pi-fw pi-book', // Book icon for subjects
                 to: '/academics/subjects-management',
                 description: 'Manage academic subjects and subject teacher assignments'
@@ -111,7 +105,7 @@ const model = ref([
         path: '/fees',
         items: [
             {
-                label: 'Fee Management',
+                label: 'Fee management',
                 icon: 'pi pi-fw pi-cog',
                 to: '/fees/management',
                 description: 'Manage fee groups and allocations'

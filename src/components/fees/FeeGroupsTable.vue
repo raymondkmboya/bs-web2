@@ -67,7 +67,7 @@ function getTypeLabel(type) {
         size="small"
     >
         <template #header>
-            <div class="flex justify-content-between">
+            <div class="flex justify-between items-center">
                 <Button 
                     type="button" 
                     icon="pi pi-filter-slash" 
@@ -86,20 +86,20 @@ function getTypeLabel(type) {
             </div>
         </template>
 
-        <Column field="name" header="Fee Group Name" sortable>
+        <Column field="fee_group_name" header="Fee Group Name" sortable>
             <template #body="{ data }">
-                <span class="font-semibold">{{ data.name }}</span>
+                <span class="font-semibold">{{ data.fee_group_name }}</span>
             </template>
         </Column>
 
-        <Column field="type" header="Type" sortable>
+        <!-- <Column field="type" header="Type" sortable>
             <template #body="{ data }">
                 <Tag 
                     :value="getTypeLabel(data.type)" 
                     :severity="data.type === 'mandatory' ? 'danger' : data.type === 'optional' ? 'warning' : 'info'"
                 />
             </template>
-        </Column>
+        </Column> -->
 
         <Column field="description" header="Description">
             <template #body="{ data }">
@@ -107,14 +107,14 @@ function getTypeLabel(type) {
             </template>
         </Column>
 
-        <Column field="isActive" header="Status" sortable>
+        <!-- <Column field="isActive" header="Status" sortable>
             <template #body="{ data }">
                 <Tag 
                     :value="data.isActive ? 'Active' : 'Inactive'" 
                     :severity="getSeverity(data.isActive)"
                 />
             </template>
-        </Column>
+        </Column> -->
 
         <Column header="Actions" :exportable="false" style="min-width: 6rem">
             <template #body="{ data }">

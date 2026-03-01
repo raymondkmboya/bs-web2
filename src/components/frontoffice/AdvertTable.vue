@@ -22,7 +22,7 @@ const filters = ref({
     cost: { value: null, matchMode: 'contains' },
     status: { value: null, matchMode: 'equals' },
     medium: { value: null, matchMode: 'equals' },
-    advertDate: { value: null, matchMode: 'contains' }
+    advert_date: { value: null, matchMode: 'contains' }
 });
 
 // Status options
@@ -52,7 +52,7 @@ function clearFilter() {
         cost: { value: null, matchMode: 'contains' },
         status: { value: null, matchMode: 'equals' },
         medium: { value: null, matchMode: 'equals' },
-        advertDate: { value: null, matchMode: 'contains' }
+        advert_date: { value: null, matchMode: 'contains' }
     };
 }
 
@@ -102,7 +102,7 @@ function formatDate(dateString) {
         v-model:filters="filters"
         filterDisplay="menu"
         :loading="loading"
-        :globalFilterFields="['user', 'cost', 'advertDate', 'medium']"
+        :globalFilterFields="['user', 'cost', 'advert_date', 'medium']"
         showGridlines
         responsiveLayout="scroll"
         :paginatorTemplate="'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown'"
@@ -161,7 +161,7 @@ function formatDate(dateString) {
             </template>
         </Column>
 
-        <Column field="advertDate" header="Advert Date" :sortable="true" filterMatchMode="contains">
+        <Column field="advert_date" header="Advert Date" :sortable="true" filterMatchMode="contains">
             <template #filter="{ filterModel, filterCallback }">
                 <InputText
                     type="text"
@@ -172,11 +172,11 @@ function formatDate(dateString) {
                 />
             </template>
             <template #body="{ data }">
-                {{ formatDate(data.advertDate) }}
+                {{ formatDate(data.advert_date) }}
             </template>
         </Column>
 
-        <Column field="user" header="User" :sortable="true" filterMatchMode="contains">
+        <Column field="user.staff.first_name" header="InCharge" :sortable="true" filterMatchMode="contains">
             <template #filter="{ filterModel, filterCallback }">
                 <InputText
                     type="text"
@@ -188,7 +188,7 @@ function formatDate(dateString) {
             </template>
         </Column>
 
-        <Column header="Actions" style="min-width: 150px">
+        <!-- <Column header="Actions" style="min-width: 150px">
             <template #body="{ data }">
                 <Button
                     icon="pi pi-eye"
@@ -209,6 +209,6 @@ function formatDate(dateString) {
                     @click="handleEdit(data)"
                 />
             </template>
-        </Column>
+        </Column> -->
     </DataTable>
 </template>

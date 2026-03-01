@@ -1,6 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import TimetableView from '@/components/academics/TimetableView.vue';
+import TimetableList from '@/components/academics/TimetableList.vue';
+import AcademicService from '@/service/AcademicService';
 
 const activeTab = ref(0);
 const loading = ref(false);
@@ -65,63 +67,81 @@ async function loadStreams() {
 async function loadTimetable() {
     try {
         loading.value = true;
-        // Mock timetable data
-        timetableData.value = [
-            {
-                day: 'Monday',
-                timeSlot: '07:30-08:20',
-                subject: 'Mathematics',
-                teacher: 'Mr. Smith',
-                room: 'Room 101',
-                stream: 'Form 1A',
-                level: 'Form 1'
-            },
-            {
-                day: 'Monday',
-                timeSlot: '08:20-09:00',
-                subject: 'English',
-                teacher: 'Ms. Johnson',
-                room: 'Room 102',
-                stream: 'Form 1B',
-                level: 'Form 1'
-            },
-            {
-                day: 'Monday',
-                timeSlot: '09:00-09:40',
-                subject: 'Physics',
-                teacher: 'Mr. Brown',
-                room: 'Room 103',
-                stream: 'Form 1C',
-                level: 'Form 1'
-            },
-            {
-                day: 'Monday',
-                timeSlot: '09:40-10:20',
-                subject: 'Chemistry',
-                teacher: 'Ms. Davis',
-                room: 'Room 104',
-                stream: 'Form 1D',
-                level: 'Form 1'
-            },
-            {
-                day: 'Tuesday',
-                timeSlot: '07:30-08:20',
-                subject: 'Mathematics',
-                teacher: 'Mr. Smith',
-                room: 'Room 101',
-                stream: 'Form 1A',
-                level: 'Form 1'
-            },
-            {
-                day: 'Tuesday',
-                timeSlot: '08:20-09:00',
-                subject: 'Biology',
-                teacher: 'Ms. Johnson',
-                room: 'Room 102',
-                stream: 'Form 1B',
-                level: 'Form 1'
+        const response = await AcademicService.getTimeTable();
+        // let timetableData.value = [];
+
+        response.forEach(element => {
+            let timeSlot = {
+                 day: element.day_of_week,
+                timeSlot: element.time_slot,
+                subject: element.subject.subject_name,
+                teacher: element.teacher.first_name,
+                room: element.room.room_number,
+                stream: element.class_stream.class_level.class_level_name+'-'+element.class_stream.class_level_stream_name,
+                level: element.day_of_week
             }
-        ];
+            timetableData.value.push(timeSlot)
+
+        });
+
+        console.log(timetableData.value)
+        // Mock timetable data
+        // timetableData.value = [
+        //     {
+        //         day: 'Monday',
+        //         timeSlot: '07:30-08:20',
+        //         subject: 'Mathematics',
+        //         teacher: 'Mr. Smith',
+        //         room: 'Room 101',
+        //         stream: 'Form 1A',
+        //         level: 'Form 1'
+        //     },
+        //     {
+        //         day: 'Monday',
+        //         timeSlot: '08:20-09:00',
+        //         subject: 'English',
+        //         teacher: 'Ms. Johnson',
+        //         room: 'Room 102',
+        //         stream: 'Form 1B',
+        //         level: 'Form 1'
+        //     },
+        //     {
+        //         day: 'Monday',
+        //         timeSlot: '09:00-09:40',
+        //         subject: 'Physics',
+        //         teacher: 'Mr. Brown',
+        //         room: 'Room 103',
+        //         stream: 'Form 1C',
+        //         level: 'Form 1'
+        //     },
+        //     {
+        //         day: 'Monday',
+        //         timeSlot: '09:40-10:20',
+        //         subject: 'Chemistry',
+        //         teacher: 'Ms. Davis',
+        //         room: 'Room 104',
+        //         stream: 'Form 1D',
+        //         level: 'Form 1'
+        //     },
+        //     {
+        //         day: 'Tuesday',
+        //         timeSlot: '07:30-08:20',
+        //         subject: 'Mathematics',
+        //         teacher: 'Mr. Smith',
+        //         room: 'Room 101',
+        //         stream: 'Form 1A',
+        //         level: 'Form 1'
+        //     },
+        //     {
+        //         day: 'Tuesday',
+        //         timeSlot: '08:20-09:00',
+        //         subject: 'Biology',
+        //         teacher: 'Ms. Johnson',
+        //         room: 'Room 102',
+        //         stream: 'Form 1B',
+        //         level: 'Form 1'
+        //     }
+        // ];
     } catch (error) {
         console.error('Failed to load timetable:', error);
     } finally {
@@ -129,22 +149,11 @@ async function loadTimetable() {
     }
 }
 
-function getFilteredTimetable() {
-    let filtered = timetableData.value;
-    
-    if (selectedLevel.value) {
-        filtered = filtered.filter(item => item.level === selectedLevel.value.name);
-    }
-    
-    if (selectedStream.value) {
-        filtered = filtered.filter(item => item.stream === selectedStream.value.name);
-    }
-    
-    if (selectedDay.value) {
-        filtered = filtered.filter(item => item.day === selectedDay.value);
-    }
-    
-    return filtered;
+// Event handlers for TimetableList component
+function clearFilters() {
+    selectedLevel.value = null;
+    selectedStream.value = null;
+    selectedDay.value = null;
 }
 
 function getSubjectColor(subject) {
@@ -156,10 +165,17 @@ function getSubjectColor(subject) {
         'Biology': 'teal',
         'History': 'brown',
         'Geography': 'cyan',
-        'Kiswahili': 'pink'
+        'Kiswahili': 'pink',
+        'Civics': 'pink'
     };
     return colors[subject] || 'grey';
 }
+
+function openTimeTableFormDialog(allocation = null) {
+    editingAllocation.value = allocation;
+    showAllocationDialog.value = true;
+}
+
 </script>
 
 <template>
@@ -173,10 +189,10 @@ function getSubjectColor(subject) {
         <div class="flex gap-3 mb-4">
             <div class="flex-1">
                 <label class="block text-600 font-medium mb-2">Filter by Level</label>
-                <Dropdown 
-                    v-model="selectedLevel" 
-                    :options="levels" 
-                    optionLabel="name" 
+                <Dropdown
+                    v-model="selectedLevel"
+                    :options="levels"
+                    optionLabel="name"
                     placeholder="All Levels"
                     class="w-full"
                     showClear
@@ -184,10 +200,10 @@ function getSubjectColor(subject) {
             </div>
             <div class="flex-1">
                 <label class="block text-600 font-medium mb-2">Filter by Stream</label>
-                <Dropdown 
-                    v-model="selectedStream" 
-                    :options="streams" 
-                    optionLabel="name" 
+                <Dropdown
+                    v-model="selectedStream"
+                    :options="streams"
+                    optionLabel="name"
                     placeholder="All Streams"
                     class="w-full"
                     showClear
@@ -195,9 +211,9 @@ function getSubjectColor(subject) {
             </div>
             <div class="flex-1">
                 <label class="block text-600 font-medium mb-2">Filter by Day</label>
-                <Dropdown 
-                    v-model="selectedDay" 
-                    :options="daysOfWeek" 
+                <Dropdown
+                    v-model="selectedDay"
+                    :options="daysOfWeek"
                     placeholder="All Days"
                     class="w-full"
                     showClear
@@ -209,102 +225,26 @@ function getSubjectColor(subject) {
             <!-- Timetable View Tab -->
             <TabPanel header="Timetable View">
                 <TimetableView
-                    :timetable-data="getFilteredTimetable()"
+                    :timetable-data="timetableData"
                     :time-slots="timeSlots"
                     :days-of-week="daysOfWeek"
                     :loading="loading"
+                    :selectedLevel="selectedLevel"
+                    :selectedStream="selectedStream"
+                    :selectedDay="selectedDay"
                 />
             </TabPanel>
 
             <!-- List View Tab -->
             <TabPanel header="List View">
-                <DataTable 
-                    :value="getFilteredTimetable()" 
-                    :paginator="true" 
-                    :rows="20" 
-                    dataKey="id"
+                <TimetableList
+                    :timetableData="timetableData"
                     :loading="loading"
-                    responsiveLayout="scroll"
-                    stripedRows
-                    showGridlines
-                >
-                    <template #header>
-                        <div class="flex justify-content-between">
-                            <Button 
-                                type="button" 
-                                icon="pi pi-filter-slash" 
-                                label="Clear Filters" 
-                                class="p-button-outlined" 
-                                size="small"
-                                @click="selectedLevel = null; selectedStream = null; selectedDay = null;"
-                            />
-                            <span class="p-input-icon-left">
-                                <i class="pi pi-search" />
-                                <InputText placeholder="Search timetable..." />
-                            </span>
-                        </div>
-                    </template>
-
-                    <Column field="day" header="Day" sortable>
-                        <template #body="{ data }">
-                            <Tag 
-                                :value="data.day" 
-                                severity="info"
-                            />
-                        </template>
-                    </Column>
-
-                    <Column field="timeSlot" header="Time" sortable>
-                        <template #body="{ data }">
-                            <span class="font-semibold">{{ data.timeSlot }}</span>
-                        </template>
-                    </Column>
-
-                    <Column field="subject" header="Subject" sortable>
-                        <template #body="{ data }">
-                            <Tag 
-                                :value="data.subject" 
-                                :severity="getSubjectColor(data.subject)"
-                            />
-                        </template>
-                    </Column>
-
-                    <Column field="teacher" header="Teacher" sortable>
-                        <template #body="{ data }">
-                            <div class="flex align-items-center">
-                                <i class="pi pi-user mr-2"></i>
-                                <span>{{ data.teacher }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="room" header="Room" sortable>
-                        <template #body="{ data }">
-                            <div class="flex align-items-center">
-                                <i class="pi pi-home mr-2"></i>
-                                <span>{{ data.room }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="stream" header="Stream" sortable>
-                        <template #body="{ data }">
-                            <Tag 
-                                :value="data.stream" 
-                                severity="warning"
-                            />
-                        </template>
-                    </Column>
-
-                    <Column field="level" header="Level" sortable>
-                        <template #body="{ data }">
-                            <Tag 
-                                :value="data.level" 
-                                severity="success"
-                            />
-                        </template>
-                    </Column>
-                </DataTable>
+                    :selectedLevel="selectedLevel"
+                    :selectedStream="selectedStream"
+                    :selectedDay="selectedDay"
+                    @clear-filters="clearFilters"
+                />
             </TabPanel>
         </TabView>
     </div>

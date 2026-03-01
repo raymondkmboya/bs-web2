@@ -1,11 +1,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import RegistrationService from '@/services/RegistrationService.js';
+import PaymentService from '@/service/PaymentService.js';
+
 
 const loading = ref(false);
 const stats = ref([
     {
-        title: 'Total Expected',
+        title: 'Total Amount Expected',
         value: '0',
         description: 'Total fees expected from all students',
         percentage: '100%',
@@ -13,7 +15,7 @@ const stats = ref([
         color: 'blue'
     },
     {
-        title: 'Total Paid',
+        title: 'Total Amount Paid',
         value: '0',
         description: 'Total amount collected from students',
         percentage: '0%',
@@ -28,6 +30,31 @@ const stats = ref([
         icon: 'pi pi-exclamation-triangle',
         color: 'orange'
     },
+    {
+        title: 'Transactions Approved',
+        value: '0',
+        description: 'Number of approved transactions',
+        percentage: '0%',
+        icon: 'pi pi-check',
+        color: 'green'
+    },
+    {
+        title: 'Transactions Rejected',
+        value: '0',
+        description: 'Number of rejected transactions',
+        percentage: '0%',
+        icon: 'pi pi-check',
+        color: 'green'
+    },
+    {
+        title: 'Pending Approval',
+        value: '0',
+        description: 'Transactions awaiting approval',
+        percentage: '0%',
+        icon: 'pi pi-clock',
+        color: 'orange'
+    }
+    ,
     {
         title: 'Daily Collections',
         value: '0',
@@ -51,22 +78,28 @@ async function loadStats() {
         loading.value = true;
 
         // Get fee collections data
-        const collections = await RegistrationService.getFeeCollections();
+        const collections = await PaymentService.getPaymentStats();
+
+        // alert(collections.expected)
 
         // Calculate stats
-        stats.value.totalExpected = collections.reduce((sum, item) => sum + item.totalAmount, 0);
-        stats.value.totalPaid = collections.reduce((sum, item) => sum + item.totalPaid, 0);
-        stats.value.totalBalance = collections.reduce((sum, item) => sum + item.balance, 0);
+        stats.value[0].value = collections.expected;
+        stats.value[1].value = collections.completed;
+        stats.value[2].value = collections.balance;
+        stats.value[3].value = collections.approved;
+        stats.value[4].value = collections.rejected;
+        stats.value[5].value = collections.pendingApproval;
+        stats.value[6].value = collections.daily;
 
         // Calculate today's collections (simplified - in real app would filter by today's date)
-        const today = new Date().toDateString();
-        const todayPayments = collections
-            .filter(item => {
-                if (!item.lastPaymentDate) return false;
-                return new Date(item.lastPaymentDate).toDateString() === today;
-            })
-            .reduce((sum, item) => sum + item.totalPaid, 0);
-        stats.value.dailyCollections = todayPayments;
+        // const today = new Date().toDateString();
+        // const todayPayments = collections
+        //     .filter(item => {
+        //         if (!item.lastPaymentDate) return false;
+        //         return new Date(item.lastPaymentDate).toDateString() === today;
+        //     })
+        //     .reduce((sum, item) => sum + item.totalPaid, 0);
+        // stats.value.dailyCollections = todayPayments;
 
     } catch (error) {
         console.error('Failed to load fee collection stats:', error);

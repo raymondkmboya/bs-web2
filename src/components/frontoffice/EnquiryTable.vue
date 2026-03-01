@@ -1,29 +1,95 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+
+const emit = defineEmits(['view', 'edit', 'followUp', 'clear-filter']);
 
 const props = defineProps({
     enquiries: {
         type: Array,
-        required: true
+        default: () => []
     },
     loading: {
         type: Boolean,
         default: false
+    },
+    filters: {
+        type: Object,
+        default: () => ({})
+    },
+    globalFilterFields: {
+        type: Array,
+        default: () => []
     }
 });
 
-const emit = defineEmits(['view', 'edit', 'followUp']);
+const expandedRows = ref([]);
 
-// Filters
-const filters = ref({
-    global: { value: null, matchMode: 'contains' },
-    name: { value: null, matchMode: 'contains' },
-    email: { value: null, matchMode: 'contains' },
-    phone: { value: null, matchMode: 'contains' },
-    status: { value: null, matchMode: 'equals' },
-    source: { value: null, matchMode: 'equals' },
-    enquiryDate: { value: null, matchMode: 'contains' }
-});
+function expandAll() {
+    expandedRows.value = props.enquiries.reduce((acc, e) => (acc[e.id] = true, acc), {});
+}
+
+function collapseAll() {
+    expandedRows.value = {};
+}
+
+function clearFilter() {
+    emit('clear-filter');
+}
+
+function handleView(data) {
+    emit('view', data);
+}
+
+function handleEdit(data) {
+    emit('edit', data);
+}
+
+function handleFollowUp(data) {
+    emit('followUp', data);
+}
+
+// Function to load follow ups for a specific enquiry
+// async function loadEnquiryFollowUps(enquiryId) {
+//     try {
+//         const response = await fetch(`/api/frontoffice/enquiries/${enquiryId}/follow-ups`, {
+//             headers: {
+//                 'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//                 'Content-Type': 'application/json',
+//                 'Accept': 'application/json'
+//             }
+//         });
+
+//         if (response.ok) {
+//             const data = await response.json();
+//             return data.data || data;
+//         } else {
+//             console.error('Failed to load enquiry follow ups:', response.statusText);
+//             return [];
+//         }
+//     } catch (error) {
+//         console.error('Failed to load enquiry follow ups:', error);
+//         return [];
+//     }
+// }
+
+// Function to handle row expansion
+// async function handleRowToggle(event) {
+//     if (event.data && expandedRows.value.includes(event.data.id)) {
+//         // Row is being collapsed
+//         const index = expandedRows.value.indexOf(event.data.id);
+//         if (index > -1) {
+//             expandedRows.value.splice(index, 1);
+//         }
+//         // Remove follow ups data
+//         delete event.data.followUps;
+//     } else if (event.data) {
+//         // Row is being expanded
+//         expandedRows.value.push(event.data.id);
+//         // Load follow ups for this enquiry
+//         const followUps = await loadEnquiryFollowUps(event.data.id);
+//         event.data.followUps = followUps;
+//     }
+// }
 
 // Status options
 const statusOptions = [
@@ -37,26 +103,14 @@ const statusOptions = [
 // Source options
 const sourceOptions = [
     { label: 'Phone Call', value: 'phone_call' },
-    { label: 'Walk In', value: 'walk_in' },
-    { label: 'WhatsApp', value: 'whatsapp' },
-    { label: 'Facebook', value: 'facebook' },
     { label: 'Email', value: 'email' },
-    { label: 'Website', value: 'website' }
+    { label: 'Website', value: 'website' },
+    { label: 'Social Media', value: 'social_media' },
+    { label: 'Walk In', value: 'walk_in' },
+    { label: 'Referral', value: 'referral' }
 ];
 
-function clearFilter() {
-    filters.value = {
-        global: { value: null, matchMode: 'contains' },
-        name: { value: null, matchMode: 'contains' },
-        email: { value: null, matchMode: 'contains' },
-        phone: { value: null, matchMode: 'contains' },
-        status: { value: null, matchMode: 'equals' },
-        source: { value: null, matchMode: 'equals' },
-        enquiryDate: { value: null, matchMode: 'contains' }
-    };
-}
-
-function getSeverity(status) {
+function getStatusSeverity(status) {
     switch (status) {
         case 'converted':
             return 'success';
@@ -73,18 +127,6 @@ function getSeverity(status) {
     }
 }
 
-function handleView(data) {
-    emit('view', data);
-}
-
-function handleEdit(data) {
-    emit('edit', data);
-}
-
-function handleFollowUp(data) {
-    emit('followUp', data);
-}
-
 function formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -98,20 +140,22 @@ function formatDate(dateString) {
         :paginator="true"
         :rows="10"
         dataKey="id"
-        :rowHover="true"
-        v-model:filters="filters"
-        filterDisplay="menu"
+        :filters="filters"
+        v-model:expandedRows="expandedRows"
         :loading="loading"
-        :globalFilterFields="['name', 'email', 'phone', 'status', 'enquiryDate', 'source']"
-        showGridlines
+        :globalFilterFields="globalFilterFields"
         responsiveLayout="scroll"
-        :paginatorTemplate="'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown'"
-        :rowsPerPageOptions="[5, 10, 25]"
+        stripedRows
+        showGridlines
+        tableStyle="min-width: 60rem"
     >
         <template #header>
             <div class="flex justify-between items-center">
-                <h5 class="m-0">Enquiry List</h5>
-                <div class="flex gap-2">
+                <div class="mb-3">
+                    <h5 class="mb-2">Enquiry List</h5>
+                    <span class="text-600">Manage student enquiries and follow ups</span>
+                </div>
+                <div>
                     <Button
                         type="button"
                         icon="pi pi-filter-slash"
@@ -119,28 +163,20 @@ function formatDate(dateString) {
                         outlined
                         @click="clearFilter"
                     />
-                    <IconField>
-                        <InputIcon>
-                            <i class="pi pi-search" />
-                        </InputIcon>
-                        <InputText
-                            v-model="filters['global'].value"
-                            placeholder="Keyword Search"
-                        />
-                    </IconField>
                 </div>
             </div>
         </template>
         <template #empty> No enquiries found. </template>
         <template #loading> Loading enquiries data. Please wait. </template>
 
-        <Column field="name" header="Name" :sortable="true" filterMatchMode="contains">
+        <Column expander style="width: 5rem" />
+        <Column field="full_name" header="Name" :sortable="true" filterMatchMode="contains">
             <template #filter="{ filterModel, filterCallback }">
-                <InputText 
-                    type="text" 
-                    v-model="filterModel.value" 
-                    @keydown.enter="filterCallback()" 
-                    class="p-column-filter" 
+                <InputText
+                    type="text"
+                    v-model="filterModel.value"
+                    @keydown.enter="filterCallback()"
+                    class="p-column-filter"
                     placeholder="Search by name"
                 />
             </template>
@@ -148,11 +184,11 @@ function formatDate(dateString) {
 
         <Column field="email" header="Email" :sortable="true" filterMatchMode="contains">
             <template #filter="{ filterModel, filterCallback }">
-                <InputText 
-                    type="text" 
-                    v-model="filterModel.value" 
-                    @keydown.enter="filterCallback()" 
-                    class="p-column-filter" 
+                <InputText
+                    type="text"
+                    v-model="filterModel.value"
+                    @keydown.enter="filterCallback()"
+                    class="p-column-filter"
                     placeholder="Search by email"
                 />
             </template>
@@ -160,11 +196,11 @@ function formatDate(dateString) {
 
         <Column field="phone" header="Phone" :sortable="true" filterMatchMode="contains">
             <template #filter="{ filterModel, filterCallback }">
-                <InputText 
-                    type="text" 
-                    v-model="filterModel.value" 
-                    @keydown.enter="filterCallback()" 
-                    class="p-column-filter" 
+                <InputText
+                    type="text"
+                    v-model="filterModel.value"
+                    @keydown.enter="filterCallback()"
+                    class="p-column-filter"
                     placeholder="Search by phone"
                 />
             </template>
@@ -184,7 +220,10 @@ function formatDate(dateString) {
                 />
             </template>
             <template #body="{ data }">
-                <Tag :value="data.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())" :severity="getSeverity(data.status)" />
+                <Tag
+                    :value="data.status"
+                    :severity="getStatusSeverity(data.status)"
+                />
             </template>
         </Column>
 
@@ -201,14 +240,11 @@ function formatDate(dateString) {
                     showClear
                 />
             </template>
-            <template #body="{ data }">
-                <Tag :value="data.source.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())" :severity="getSeverity(data.status)" />
-            </template>
         </Column>
 
         <Column field="enquiryDate" header="Enquiry Date" :sortable="true" filterMatchMode="contains">
             <template #filter="{ filterModel, filterCallback }">
-                <InputText 
+                <InputText
                     type="text"
                     v-model="filterModel.value"
                     @keydown.enter="filterCallback()"
@@ -243,5 +279,97 @@ function formatDate(dateString) {
                 />
             </template>
         </Column>
+
+        <template #expansion="slotProps">
+            <div class="p-4 bg-gray-50 border-round">
+                <div class="flex justify-between items-center mb-3">
+                    <h5 class="m-0 text-lg font-semibold text-blue-600">
+                        <i class="pi pi-phone mr-2"></i>
+                        Follow Ups for {{ slotProps.data.full_name }}
+                    </h5>
+                    <Button
+                        icon="pi pi-plus"
+                        label="Add Follow Up"
+                        class="p-button-sm p-button-outlined"
+                        @click="handleFollowUp(slotProps.data)"
+                    />
+                </div>
+
+                <!-- Follow Ups List -->
+                <div v-if="slotProps.data.follow_ups && slotProps.data.follow_ups.length > 0" class="space-y-2">
+                    <div
+                        v-for="followUp in slotProps.data.follow_ups"
+                        :key="followUp.id"
+                        class="p-3 bg-white border border-round shadow-sm"
+                    >
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex-1">
+                                <div class="text-sm text-600 mb-1">
+                                    <i class="pi pi-calendar mr-1"></i>
+                                    {{ formatDate(followUp.follow_up_date) }}
+                                </div>
+                                <div class="text-sm text-500 mb-1">
+                                    <i class="pi pi-phone mr-1"></i>
+                                    Medium: {{ followUp.medium_used }}
+                                </div>
+                                <div v-if="followUp.next_follow_up_date" class="text-sm text-500 mb-1">
+                                    <i class="pi pi-clock mr-1"></i>
+                                    Next Follow Up: {{ formatDate(followUp.next_follow_up_date) }}
+                                </div>
+                                <div v-if="followUp.message_content" class="text-sm text-700 mt-2">
+                                    <i class="pi pi-comment mr-1"></i>
+                                    {{ followUp.message_content }}
+                                </div>
+                                <div v-if="followUp.notes" class="text-sm text-600 mt-2">
+                                    <i class="pi pi-file mr-1"></i>
+                                    {{ followUp.notes }}
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <Tag
+                                    :value="followUp.status"
+                                    :severity="getStatusSeverity(followUp.status)"
+                                    class="text-xs"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- No Follow Ups Message -->
+                <div v-else class="text-center text-500 py-4">
+                    <i class="pi pi-info-circle text-2xl mb-2"></i>
+                    <p>No follow ups recorded yet</p>
+                    <Button
+                        icon="pi pi-plus"
+                        label="Add First Follow Up"
+                        class="mt-3"
+                        @click="handleFollowUp(slotProps.data)"
+                    />
+                </div>
+            </div>
+        </template>
+
     </DataTable>
 </template>
+
+<style scoped>
+.text-400 {
+    color: #94a3b8;
+}
+
+.text-500 {
+    color: #495057;
+    font-weight: 600;
+}
+
+.text-600 {
+    color: #495057;
+    font-weight: 600;
+}
+
+.text-700 {
+    color: #343a40;
+    font-weight: 700;
+}
+</style>

@@ -1,64 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import RegistrationService from '@/services/RegistrationService.js';
+import FrontOfficeService from '@/service/FrontOfficeService.js';
 
 const stats = ref([
-    {
-        title: 'Total Adverts',
-        value: '0',
-        description: 'All prospective enquiries',
-        percentage: '100%',
-        icon: 'pi pi-bullhorn',
-        color: 'blue'
-    },
-    {
-        title: 'Phone Calls',
-        value: '0',
-        description: 'Incoming calls logged',
-        percentage: '0%',
-        icon: 'pi pi-phone',
-        color: 'green'
-    },
-    {
-        title: 'Road Posters',
-        value: '0',
-        description: 'Campus visits recorded',
-        percentage: '0%',
-        icon: 'pi pi-map',
-        color: 'orange'
-    },
-    {
-        title: 'Car Posters',
-        value: '0',
-        description: 'WhatsApp messages',
-        percentage: '0%',
-        icon: 'pi pi-car',
-        color: 'teal'
-    },
-    {
-        title: 'Radio',
-        value: '0',
-        description: 'Social media enquiries',
-        percentage: '0%',
-        icon: 'pi pi-broadcast',
-        color: 'indigo'
-    },
-     {
-        title: 'TV',
-        value: '0',
-        description: 'Social media enquiries',
-        percentage: '0%',
-        icon: 'pi pi-tv',
-        color: 'purple'
-    },
-     {
-        title: 'SMS',
-        value: '0',
-        description: 'Social media enquiries',
-        percentage: '0%',
-        icon: 'pi pi-comment',
-        color: 'pink'
-    },
     {
         title: 'Total Cost',
         value: '0',
@@ -66,62 +10,102 @@ const stats = ref([
         percentage: '100%',
         icon: 'pi pi-money-bill',
         color: 'cyan'
+    },
+    {
+        title: 'Phone Call',
+        value: '0',
+        description: 'Phone call advertisements',
+        percentage: '0%',
+        icon: 'pi pi-phone',
+        color: 'blue'
+    },
+    {
+        title: 'Road Posters',
+        value: '0',
+        description: 'Road poster advertisements',
+        percentage: '0%',
+        icon: 'pi pi-map',
+        color: 'green'
+    },
+    {
+        title: 'Car Posters',
+        value: '0',
+        description: 'Car poster advertisements',
+        percentage: '0%',
+        icon: 'pi pi-car',
+        color: 'orange'
+    },
+    {
+        title: 'Radio',
+        value: '0',
+        description: 'Radio advertisements',
+        percentage: '0%',
+        icon: 'pi pi-broadcast',
+        color: 'indigo'
+    },
+    {
+        title: 'TV',
+        value: '0',
+        description: 'TV advertisements',
+        percentage: '0%',
+        icon: 'pi pi-tv',
+        color: 'purple'
+    },
+    {
+        title: 'SMS',
+        value: '0',
+        description: 'SMS advertisements',
+        percentage: '0%',
+        icon: 'pi pi-comment',
+        color: 'pink'
     }
-
 ]);
 
 onMounted(async () => {
     try {
-        const adverts = await RegistrationService.getAdverts();
+        const response = await FrontOfficeService.getAdvertStats();
+        const advertData = await FrontOfficeService.getAdverts();
 
-        // Calculate total cost from adverts
-        const totalCost = adverts.reduce((sum, advert) => {
-            const cost = parseFloat(advert.cost?.replace(/,/g, '') || '0');
-            return sum + cost;
-        }, 0);
+        // Handle different response structures
+        const statsData = response.data || response;
+
+        // Update total cost
+        const totalCost = statsData.total_cost || statsData.data?.total_cost || 0;
+        const totalAdverts = statsData.total || statsData.data?.total || advertData.length || 0;
+
+        // Get performance data (students per medium)
+        const performanceData = statsData.performance || statsData.data?.performance || {};
 
         // Calculate metrics for each medium
         const mediumStats = {
-            'Road Posters': adverts.filter(a => a.medium === 'road_posters'),
-            'Car Posters': adverts.filter(a => a.medium === 'car_posters'),
-            'Radio': adverts.filter(a => a.medium === 'radio'),
-            'TV': adverts.filter(a => a.medium === 'tv'),
-            'SMS': adverts.filter(a => a.medium === 'sms'),
-            'Phone Calls': adverts.filter(a => a.medium === 'phone_call')
+            'Phone Call': advertData.filter(a => a.medium === 'Phone Call'),
+            'Road Posters': advertData.filter(a => a.medium === 'Road Posters'),
+            'Car Posters': advertData.filter(a => a.medium === 'Car Posters'),
+            'Radio': advertData.filter(a => a.medium === 'Radio'),
+            'TV': advertData.filter(a => a.medium === 'TV'),
+            'SMS': advertData.filter(a => a.medium === 'SMS')
         };
 
-        // Update medium stats with cost, BSE count, and CPA
-        Object.keys(mediumStats).forEach((mediumName, index) => {
-            const mediumAdverts = mediumStats[mediumName];
-            const mediumCost = mediumAdverts.reduce((sum, advert) => {
-                const cost = parseFloat(advert.cost?.replace(/,/g, '') || '0');
-                return sum + cost;
-            }, 0);
-            const mediumBseCount = mediumAdverts.filter(advert => advert.source === 'BSE').length;
-            const mediumCpa = mediumAdverts.length > 0 ? Math.round(mediumCost / mediumAdverts.length) : 0;
+        // Update stats with actual costs and performance
+        stats.value.forEach((stat) => {
+            if (stat.title === 'Total Cost') {
+                stat.value = totalCost.toLocaleString();
+                stat.description = `Total advertisement spend across ${totalAdverts} adverts`;
+            } else if (mediumStats[stat.title]) {
+                const mediumAdverts = mediumStats[stat.title];
+                const mediumCost = mediumAdverts.reduce((sum, advert) => {
+                    return sum + parseFloat(advert.cost || 0);
+                }, 0);
+                const mediumCount = mediumAdverts.length;
+                const studentCount = performanceData[stat.title] || 0;
 
-            // Update corresponding stat card (index 1-6 for mediums)
-            const statIndex = index + 1;
-            if (stats.value[statIndex]) {
-                stats.value[statIndex].value = mediumAdverts.length.toLocaleString();
-                stats.value[statIndex].description = `Cost: TZS ${mediumCost.toLocaleString()} | BSE: ${mediumBseCount} | CPA: TZS ${mediumCpa.toLocaleString()}`;
+                stat.value = mediumCost.toLocaleString();
+                stat.description = `${mediumCount} advert(s) - ${studentCount} students`;
+                stat.percentage = totalCost > 0 ? ((mediumCost / totalCost) * 100).toFixed(1) + '%' : '0%';
             }
         });
-
-        // Update total adverts
-        stats.value[0].value = adverts.length.toLocaleString();
-
-        // Calculate percentages
-        const total = adverts.length;
-        stats.value[0].percentage = '100%';
-        stats.value[1].percentage = total > 0 ? Math.round((adverts.filter(a => a.medium === 'phone_call').length / total) * 100) + '%' : '0%';
-        stats.value[2].percentage = total > 0 ? Math.round((adverts.filter(a => a.medium === 'road_posters').length / total) * 100) + '%' : '0%';
-        stats.value[3].percentage = total > 0 ? Math.round((adverts.filter(a => a.medium === 'car_posters').length / total) * 100) + '%' : '0%';
-        stats.value[4].percentage = total > 0 ? Math.round((adverts.filter(a => a.medium === 'radio').length / total) * 100) + '%' : '0%';
-        stats.value[5].percentage = total > 0 ? Math.round((adverts.filter(a => a.medium === 'tv').length / total) * 100) + '%' : '0%';
-        stats.value[6].percentage = total > 0 ? Math.round((adverts.filter(a => a.medium === 'sms').length / total) * 100) + '%' : '0%';
     } catch (error) {
-        console.error('Failed to load advert stats:', error);
+        console.error('Failed to load advert statistics:', error);
     }
 });
 </script>

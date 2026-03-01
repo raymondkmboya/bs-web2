@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import AdvertStats from '@/components/frontoffice/AdvertStats.vue';
 import AdvertTable from '@/components/frontoffice/AdvertTable.vue';
 import AdvertForm from '@/components/frontoffice/AdvertForm.vue';
-import RegistrationService from '@/services/RegistrationService.js';
+import FrontOfficeService from '@/service/FrontOfficeService.js';
 
 // Table data
 const adverts = ref([]);
@@ -11,6 +11,7 @@ const loading = ref(false);
 
 // Form dialog
 const showAddDialog = ref(false);
+const submitError = ref('');
 
 onMounted(() => {
     loadAdverts();
@@ -19,7 +20,9 @@ onMounted(() => {
 async function loadAdverts() {
     loading.value = true;
     try {
-        adverts.value = await RegistrationService.getAdverts();
+        const response = await FrontOfficeService.getAdverts();
+        adverts.value = response.data || response; // Handle different response formats
+        console.log('Loaded adverts:', adverts.value);
     } catch (error) {
         console.error('Failed to load adverts:', error);
     } finally {
@@ -28,6 +31,7 @@ async function loadAdverts() {
 }
 
 function openAddDialog() {
+    submitError.value = ''; // Clear any previous errors
     showAddDialog.value = true;
 }
 
@@ -36,11 +40,15 @@ function closeForm() {
 }
 
 async function submitAdvert(data) {
+    submitError.value = ''; // Clear previous errors
     try {
-        await RegistrationService.addAdvert(data);
+        console.log('Submitting advert:', data);
+        await FrontOfficeService.storeAdvert(data);
         await loadAdverts(); // Refresh the table
+        closeForm(); // Close the form dialog
     } catch (error) {
         console.error('Failed to submit advert:', error);
+        submitError.value = error.response?.data?.message || 'Failed to submit advert. Please try again.';
     }
 }
 
@@ -67,6 +75,7 @@ function handleFollowUp(data) {
     <!-- Form Component - Always visible -->
     <AdvertForm
         v-model:visible="showAddDialog"
+        :error="submitError"
         @submit="submitAdvert"
         @close="closeForm"
     />

@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from 'vue';
+
 const props = defineProps({
     timetableData: {
         type: Array,
@@ -15,10 +17,41 @@ const props = defineProps({
     loading: {
         type: Boolean,
         default: false
+    },
+    selectedLevel: {
+        type: Object,
+        default: null
+    },
+    selectedStream: {
+        type: Object,
+        default: null
+    },
+    selectedDay: {
+        type: String,
+        default: null
     }
 });
 
 const emit = defineEmits(['edit-entry', 'delete-entry']);
+
+// Computed property for filtered data
+const filteredTimetableData = computed(() => {
+    let filtered = props.timetableData;
+
+    if (props.selectedLevel) {
+        filtered = filtered.filter(item => item.level === props.selectedLevel.name);
+    }
+
+    if (props.selectedStream) {
+        filtered = filtered.filter(item => item.stream === props.selectedStream.name);
+    }
+
+    if (props.selectedDay) {
+        filtered = filtered.filter(item => item.day === props.selectedDay);
+    }
+
+    return filtered;
+});
 
 function getSubjectColor(subject) {
     const colors = {
@@ -29,23 +62,24 @@ function getSubjectColor(subject) {
         'Biology': 'bg-teal-100 text-teal-800 border-teal-200',
         'History': 'bg-brown-100 text-brown-800 border-brown-200',
         'Geography': 'bg-cyan-100 text-cyan-800 border-cyan-200',
-        'Kiswahili': 'bg-pink-100 text-pink-800 border-pink-200'
+        'Kiswahili': 'bg-pink-100 text-pink-800 border-pink-200',
+        'Civics': 'bg-pink-100 text-pink-800 border-pink-200'
     };
     return colors[subject] || 'bg-gray-100 text-gray-800 border-gray-200';
 }
 
 function getEmptySlots(day, timeSlot) {
-    return !props.timetableData.some(item => item.day === day && item.timeSlot === timeSlot);
+    return !filteredTimetableData.value.some(item => item.day === day && item.timeSlot === timeSlot);
 }
 
 function getTimetableEntry(day, timeSlot) {
-    return props.timetableData.find(item => item.day === day && item.timeSlot === timeSlot);
+    return filteredTimetableData.value.find(item => item.day === day && item.timeSlot === timeSlot);
 }
 </script>
 
 <template>
     <div class="timetable-container">
-        <div class="flex justify-content-between align-items-center mb-4">
+        <div class="flex justify-between items-center mb-4">
             <div class="flex align-items-center gap-2">
                 <div class="flex items-center">
                     <div class="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
@@ -60,22 +94,31 @@ function getTimetableEntry(day, timeSlot) {
                     <span class="text-sm font-medium">Break/Lunch</span>
                 </div>
             </div>
-            <Button 
-                label="Print Timetable" 
-                icon="pi pi-print" 
-                class="p-button-outlined"
-                size="small"
-                @click="window.print()"
-            />
+            <div class="flex">
+                <Button
+                    label="Print Timetable"
+                    icon="pi pi-print"
+                    class="p-button-outlined"
+                    size="small"
+                    @click="window.print()"
+                />
+                <Button
+                    label="Add Slot"
+                    icon="pi pi-print"
+                    class="p-button-outlined"
+                    size="small"
+                    @click="window.print()"
+                />
+            </div>
         </div>
 
         <div class="timetable-grid">
             <!-- Header Row -->
             <div class="grid-header">
                 <div class="time-header">Time</div>
-                <div 
-                    v-for="day in daysOfWeek" 
-                    :key="day" 
+                <div
+                    v-for="day in daysOfWeek"
+                    :key="day"
                     class="day-header"
                 >
                     {{ day }}
@@ -83,21 +126,21 @@ function getTimetableEntry(day, timeSlot) {
             </div>
 
             <!-- Time Slot Rows -->
-            <div 
-                v-for="timeSlot in timeSlots" 
-                :key="timeSlot" 
+            <div
+                v-for="timeSlot in timeSlots"
+                :key="timeSlot"
                 class="time-row"
             >
                 <div class="time-cell">
                     {{ timeSlot }}
                 </div>
-                <div 
-                    v-for="day in daysOfWeek" 
-                    :key="`${timeSlot}-${day}`" 
+                <div
+                    v-for="day in daysOfWeek"
+                    :key="`${timeSlot}-${day}`"
                     class="subject-cell"
                     :class="{ 'empty-cell': getEmptySlots(day, timeSlot) }"
                 >
-                    <div 
+                    <div
                         v-if="!getEmptySlots(day, timeSlot)"
                         class="subject-block"
                         :class="getSubjectColor(getTimetableEntry(day, timeSlot)?.subject)"
@@ -111,8 +154,8 @@ function getTimetableEntry(day, timeSlot) {
                             </div>
                         </div>
                         <div class="subject-footer">
-                            <Tag 
-                                :value="getTimetableEntry(day, timeSlot)?.stream" 
+                            <Tag
+                                :value="getTimetableEntry(day, timeSlot)?.stream"
                                 severity="warning"
                                 size="small"
                             />
@@ -238,13 +281,13 @@ function getTimetableEntry(day, timeSlot) {
     .timetable-container {
         overflow: visible;
     }
-    
+
     .timetable-grid {
         min-width: auto;
         box-shadow: none;
         border: 2px solid #000;
     }
-    
+
     .subject-block:hover {
         transform: none;
         box-shadow: none;

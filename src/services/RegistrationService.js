@@ -1,3 +1,8 @@
+import axios from 'axios';
+import { API_BASE_URL } from '@/config/api';
+
+const API_URL = `${API_BASE_URL}/api`;
+
 export class RegistrationService {
     constructor() {
         this.registrations = [];
@@ -12,6 +17,27 @@ export class RegistrationService {
         this.nextFeeGroupId = 1;
         this.feeAllocations = [];
         this.nextFeeAllocationId = 1;
+    }
+
+    // Helper to handle requests and errors
+    async _request(method, url, data = null) {
+        try {
+            const response = await axios({
+                method,
+                url: `${API_URL}${url}`,
+                data,
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            return response.data;
+        } catch (error) {
+            console.error(`Registration API Error (${url}):`, error.response?.data || error.message);
+            throw error;
+        }
     }
 
     async getRegistrations() {
@@ -276,67 +302,7 @@ export class RegistrationService {
     }
 
     async getEnquiries() {
-        // Simulate API call
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                if (this.enquiries.length === 0) {
-                    this.enquiries = [
-                        {
-                            id: 1,
-                            name: 'Alice Johnson',
-                            email: 'alice.j@email.com',
-                            phone: '+255 712 345 678',
-                            status: 'new',
-                            source: 'phone_call',
-                            enquiryDate: '2024-01-25',
-                            message: 'Interested in Form 1 admission'
-                        },
-                        {
-                            id: 2,
-                            name: 'Bob Smith',
-                            email: 'bob.s@email.com',
-                            phone: '+255 713 456 789',
-                            status: 'contacted',
-                            source: 'walk_in',
-                            enquiryDate: '2024-01-26',
-                            message: 'Visited campus, wants tour'
-                        },
-                        {
-                            id: 3,
-                            name: 'Carol Davis',
-                            email: 'carol.d@email.com',
-                            phone: '+255 714 567 890',
-                            status: 'followed_up',
-                            source: 'whatsapp',
-                            enquiryDate: '2024-01-27',
-                            message: 'Sent application forms via WhatsApp'
-                        },
-                        {
-                            id: 4,
-                            name: 'David Wilson',
-                            email: 'david.w@email.com',
-                            phone: '+255 715 678 901',
-                            status: 'converted',
-                            source: 'facebook',
-                            enquiryDate: '2024-01-28',
-                            message: 'Saw Facebook ad, applied online'
-                        },
-                        {
-                            id: 5,
-                            name: 'Eva Brown',
-                            email: 'eva.b@email.com',
-                            phone: '+255 716 789 012',
-                            status: 'lost',
-                            source: 'email',
-                            enquiryDate: '2024-01-29',
-                            message: 'Email inquiry, no response'
-                        }
-                    ];
-                    this.nextEnquiryId = 6;
-                }
-                resolve([...this.enquiries]);
-            }, 1000);
-        });
+        return this._request('get', '/enquiries');
     }
 
     async addAdvert(advertData) {
@@ -766,19 +732,7 @@ export class RegistrationService {
     }
 
     async addEnquiry(enquiryData) {
-        // Simulate API call
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                const newEnquiry = {
-                    id: this.nextEnquiryId++,
-                    ...enquiryData,
-                    status: 'new',
-                    enquiryDate: new Date().toISOString().split('T')[0]
-                };
-                this.enquiries.unshift(newEnquiry);
-                resolve(newEnquiry);
-            }, 500);
-        });
+        return this._request('post', '/enquiries', enquiryData);
     }
 
     async updateEnquiry(enquiryId, data) {

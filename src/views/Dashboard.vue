@@ -88,33 +88,6 @@ const createClassroom = async () => {
             </div>
         </div>
 
-        <!-- API Test Section -->
-        <div class="col-span-12 mb-6">
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h2 class="text-xl font-bold mb-4">API Testing</h2>
-                <div class="flex gap-4 mb-4">
-                    <button @click="testClassroomsAPI" :disabled="loading"
-                            class="bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white px-4 py-2 rounded transition">
-                        Test Classrooms API
-                    </button>
-                    <button @click="createClassroom" :disabled="loading"
-                            class="bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white px-4 py-2 rounded transition">
-                        Create Test Classroom
-                    </button>
-                </div>
-
-                <div v-if="apiResult" class="mt-4">
-                    <h3 class="font-semibold text-green-600 mb-2">API Response:</h3>
-                    <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto max-h-64">{{ JSON.stringify(apiResult, null, 2) }}</pre>
-                </div>
-
-                <div v-if="apiError" class="mt-4">
-                    <h3 class="font-semibold text-red-600 mb-2">API Error:</h3>
-                    <pre class="bg-red-50 p-4 rounded text-sm overflow-x-auto max-h-64 text-red-700">{{ apiError }}</pre>
-                </div>
-            </div>
-        </div>
-
         <!-- Registration Stats -->
         <div class="col-span-12">
             <RegistrationStats />

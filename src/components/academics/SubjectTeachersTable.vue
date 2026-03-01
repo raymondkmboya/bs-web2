@@ -45,7 +45,7 @@ function formatNumber(num) {
         showGridlines
     >
         <template #header>
-            <div class="flex justify-content-between">
+            <div class="flex justify-between">
                 <Button 
                     type="button" 
                     icon="pi pi-filter-slash" 
@@ -65,8 +65,7 @@ function formatNumber(num) {
                 <div class="flex align-items-center">
                     <i class="pi pi-user mr-2"></i>
                     <div>
-                        <span class="font-semibold">{{ data.name }}</span>
-                        <div class="text-600 text-sm">{{ data.email }}</div>
+                        <span class="font-semibold">{{ data.first_name }} {{ data.last_name }}</span>
                     </div>
                 </div>
             </template>
@@ -76,7 +75,10 @@ function formatNumber(num) {
             <template #body="{ data }">
                 <div class="flex align-items-center">
                     <i class="pi pi-phone mr-2"></i>
-                    <span class="text-600">{{ data.phone }}</span>
+                    <div>
+                        <span class="font-semibold">{{ data.phone }}</span>
+                        <div class="text-600 text-sm">{{ data.email }}</div>
+                    </div>
                 </div>
             </template>
         </Column>
@@ -85,12 +87,16 @@ function formatNumber(num) {
             <template #body="{ data }">
                 <div class="flex align-items-center">
                     <i class="pi pi-book mr-2"></i>
-                    <span class="text-600 text-sm">{{ data.subjects }}</span>
+                    <div class="flex flex-wrap gap-1">
+                        <span v-for="subject in data.subjects" :key="subject" class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs mr-1 mb-1">
+                            {{ subject.subject_name }}({{ subject.subject_code }})
+                        </span>
+                    </div>
                 </div>
             </template>
         </Column>
 
-        <Column field="totalClasses" header="Classes" sortable>
+        <!-- <Column field="totalClasses" header="Classes" sortable>
             <template #body="{ data }">
                 <div class="flex align-items-center">
                     <i class="pi pi-sitemap mr-2"></i>
@@ -102,9 +108,9 @@ function formatNumber(num) {
                     <span class="text-600 text-sm">classes</span>
                 </div>
             </template>
-        </Column>
+        </Column> -->
 
-        <Column field="totalStudents" header="Total Students" sortable>
+        <!-- <Column field="totalStudents" header="Total Students" sortable>
             <template #body="{ data }">
                 <div class="flex align-items-center">
                     <i class="pi pi-users mr-2"></i>
@@ -126,7 +132,7 @@ function formatNumber(num) {
                     </span>
                 </div>
             </template>
-        </Column>
+        </Column> -->
 
         <Column field="status" header="Status" sortable>
             <template #body="{ data }">

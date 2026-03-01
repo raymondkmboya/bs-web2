@@ -57,7 +57,7 @@ function getScoreColor(score, maxScore) {
         showGridlines
     >
         <template #header>
-            <div class="flex justify-content-between">
+            <div class="flex justify-between">
                 <Button 
                     type="button" 
                     icon="pi pi-filter-slash" 

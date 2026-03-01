@@ -32,10 +32,10 @@ function formatTime(timeString) {
 </script>
 
 <template>
-    <DataTable 
-        :value="appointments" 
-        :paginator="true" 
-        :rows="10" 
+    <DataTable
+        :value="appointments"
+        :paginator="true"
+        :rows="10"
         dataKey="id"
         :loading="loading"
         responsiveLayout="scroll"
@@ -43,12 +43,12 @@ function formatTime(timeString) {
         showGridlines
     >
         <template #header>
-            <div class="flex justify-content-between">
-                <Button 
-                    type="button" 
-                    icon="pi pi-filter-slash" 
-                    label="Clear Filters" 
-                    class="p-button-outlined" 
+            <div class="flex justify-between">
+                <Button
+                    type="button"
+                    icon="pi pi-filter-slash"
+                    label="Clear Filters"
+                    class="p-button-outlined"
                     size="small"
                 />
                 <span class="p-input-icon-left">
@@ -126,8 +126,8 @@ function formatTime(timeString) {
 
         <Column field="status" header="Status" sortable>
             <template #body="{ data }">
-                <Tag 
-                    :value="data.status.toUpperCase()" 
+                <Tag
+                    :value="data.status.toUpperCase()"
                     :severity="getStatusSeverity(data.status)"
                 />
             </template>
@@ -135,15 +135,15 @@ function formatTime(timeString) {
 
         <Column header="Actions" :exportable="false" style="min-width: 8rem">
             <template #body="{ data }">
-                <Button 
-                    icon="pi pi-pencil" 
-                    class="p-button-rounded p-button-text mr-2" 
+                <Button
+                    icon="pi pi-pencil"
+                    class="p-button-rounded p-button-text mr-2"
                     @click="$emit('edit-appointment', data)"
                     v-tooltip="'Edit Appointment'"
                 />
-                <Button 
-                    icon="pi pi-trash" 
-                    class="p-button-rounded p-button-text p-button-danger" 
+                <Button
+                    icon="pi pi-trash"
+                    class="p-button-rounded p-button-text p-button-danger"
                     @click="$emit('delete-appointment', data)"
                     v-tooltip="'Delete Appointment'"
                 />

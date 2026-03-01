@@ -1,10 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import RegistrationService from '@/services/RegistrationService.js';
+import StudentService from '@/service/StudentService';
 
 const stats = ref([
     {
-        title: 'Total Registered',
+        title: 'Registrations',
         value: '0',
         description: 'All student registrations',
         percentage: '100%',
@@ -28,6 +29,14 @@ const stats = ref([
         color: 'orange'
     },
     {
+        title: 'Due Today Follow-ups',
+        value: '0',
+        description: 'Follow-ups scheduled for today',
+        percentage: '0%',
+        icon: 'pi pi-calendar',
+        color: 'blue'
+    },
+    {
         title: 'Stopped Follow Up',
         value: '0',
         description: 'Follow up discontinued',
@@ -39,19 +48,22 @@ const stats = ref([
 
 onMounted(async () => {
     try {
-        const statsData = await RegistrationService.getRegistrationStats();
+        const statsData = await StudentService.getRegistrationStats();
+        console.log(statsData)
         const total = statsData.total;
 
-        stats.value[0].value = statsData.total.toLocaleString();
-        stats.value[1].value = statsData.followedUp.toLocaleString();
+        stats.value[0].value = statsData.registered.toLocaleString();
+        stats.value[1].value = statsData.followUps.toLocaleString();
         stats.value[2].value = statsData.notFollowedUp.toLocaleString();
-        stats.value[3].value = statsData.stoppedFollowUp.toLocaleString();
+        stats.value[3].value = statsData.todayDueFollowUps?.toLocaleString() || '0';
+        stats.value[4].value = statsData.stoppedFollowUps.toLocaleString();
 
         // Calculate percentages
         stats.value[0].percentage = '100%';
-        stats.value[1].percentage = total > 0 ? Math.round((statsData.followedUp / total) * 100) + '%' : '0%';
+        stats.value[1].percentage = total > 0 ? Math.round((statsData.followedUps / total) * 100) + '%' : '0%';
         stats.value[2].percentage = total > 0 ? Math.round((statsData.notFollowedUp / total) * 100) + '%' : '0%';
-        stats.value[3].percentage = total > 0 ? Math.round((statsData.stoppedFollowUp / total) * 100) + '%' : '0%';
+        stats.value[3].percentage = total > 0 ? Math.round((statsData.todayDueFollowUps / total) * 100) + '%' : '0%';
+        stats.value[4].percentage = total > 0 ? Math.round((statsData.stoppedFollowUps / total) * 100) + '%' : '0%';
     } catch (error) {
         console.error('Failed to load stats:', error);
     }

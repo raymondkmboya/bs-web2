@@ -5,17 +5,22 @@ const API_URL = `${API_BASE_URL}/students`;
 
 class StudentService {
     // Helper to handle requests and errors
-    async request(method, url, data = null) {
+    async request(method, url, data = null, config = {}) {
         try {
             const response = await axios({
                 method,
                 url: `${API_URL}${url}`,
                 data,
+                ...config, // Spreads the config (including headers) we passed from admitStudent
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    // Keep Authorization as a default
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    // Merge other headers, allowing admitStudent to override Content-Type
+                    ...config.headers
                 }
             });
+
+            // Return the nested data from your backend response
             return response.data.data;
         } catch (error) {
             console.error(`API Error (${url}):`, error.response?.data || error.message);
@@ -28,11 +33,25 @@ class StudentService {
         return this.request('get', '/register');
     }
 
-    async getAdmitted() {
+    async getRegistrationStats() {
+        // Simulate API call
+        return this.request('get', '/registration-stats');
+    }
+
+    async getAdmissionStats() {
+        // Simulate API call
+        return this.request('get', '/admission-stats');
+    }
+
+    async getRegistrationFollowups() {
+        return this.request('get', '/followups');
+    }
+
+    async getAdmissions() {
         return this.request('get', '/admit');
     }
 
-    async getEnrolled() {
+    async getEnrollments() {
         return this.request('get', '/enroll');
     }
 
@@ -40,8 +59,24 @@ class StudentService {
         return this.request('post', '/register', studentData);
     }
 
-    async admitStudent(id, admissionData) {
-        return this.request('post', `/${id}/admit`, admissionData);
+    async admitStudent(id, data) {
+        // Check if data is FormData (file upload) or regular JSON
+        const isFormData = data instanceof FormData;
+
+        const config = {
+            headers: {
+                // Don't set Content-Type for FormData - let browser set it with boundary
+                ...(isFormData ? {} : { 'Content-Type': 'application/json' })
+            }
+        };
+
+        if (isFormData) {
+            // For FormData, let axios handle the content-type automatically
+            return this.request('post', `/${id}/admit`, data, config);
+        } else {
+            // For regular JSON data
+            return this.request('post', `/${id}/admit`, data, config);
+        }
     }
 
     async enrollStudent(id, enrollmentData) {

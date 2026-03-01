@@ -4,7 +4,7 @@ import { ref } from 'vue';
 const emit = defineEmits(['add-allocation', 'edit-allocation', 'delete-allocation']);
 
 const props = defineProps({
-    feeAllocations: {
+    feeStructures: {
         type: Array,
         default: () => []
     },
@@ -49,7 +49,7 @@ function formatCurrency(amount) {
 
 <template>
     <DataTable 
-        :value="feeAllocations" 
+        :value="feeStructures" 
         :paginator="true" 
         :rows="5" 
         dataKey="id"
@@ -62,7 +62,7 @@ function formatCurrency(amount) {
         size="small"
     >
         <template #header>
-            <div class="flex justify-content-between">
+            <div class="flex justify-between">
                 <Button 
                     type="button" 
                     icon="pi pi-filter-slash" 
@@ -81,17 +81,23 @@ function formatCurrency(amount) {
             </div>
         </template>
 
-        <Column field="feeGroupName" header="Fee Group" sortable>
+        <Column field="fee_structure_name" header="Fee Structure" sortable>
             <template #body="{ data }">
-                <span class="font-semibold">{{ data.feeGroupName }}</span>
+                <span class="font-semibold">{{ data.fee_structure_name }}</span>
             </template>
         </Column>
 
-        <Column field="streamName" header="Stream" sortable>
+         <Column field="fee_group" header="Fee Group" sortable>
+            <template #body="{ data }">
+                <span class="font-semibold">{{ data.fee_group.fee_group_name }}</span>
+            </template>
+        </Column>
+
+        <Column field="streamName" header="Class Level" sortable>
             <template #body="{ data }">
                 <Tag 
-                    :value="data.streamName" 
-                    :severity="data.streamName.includes('Science') ? 'info' : 'warning'"
+                    :value="data.class_level?.class_level_name" 
+                    :severity="data.class_level?.class_level_name.includes('Science') ? 'info' : 'warning'"
                 />
             </template>
         </Column>
@@ -102,26 +108,33 @@ function formatCurrency(amount) {
             </template>
         </Column>
 
-        <Column field="academicYear" header="Year" sortable>
+         <Column field="initial_amount" header="Initial Amount (TZS)" sortable>
             <template #body="{ data }">
-                <Tag :value="data.academicYear" severity="secondary" />
+                <span class="font-bold text-blue-600">{{ formatCurrency(data.initial_amount) }}</span>
+            </template>
+        </Column>
+
+        <Column field="academic_year" header="Year" sortable>
+            <template #body="{ data }">
+                <Tag :value="data.academic_year" severity="secondary" />
             </template>
         </Column>
 
         <Column field="installments" header="Installments" sortable>
             <template #body="{ data }">
-                <span v-if="data.isInstallmentAllowed" class="text-sm">
-                    {{ data.maxInstallments }}x
-                </span>
-                <span v-else class="text-600 text-sm">No</span>
+                <!-- <span v-if="data.installments" class="text-sm">
+                    {{ data.installments }}x
+                </span> -->
+                <Tag :value="data.installments" severity="secondary" />
+                    <!-- <span v-else class="text-600 text-sm">{{ data.installments }}</span> -->
             </template>
         </Column>
 
-        <Column field="status" header="Status" sortable>
+        <Column field="admission_month" header="Admission Month" sortable>
             <template #body="{ data }">
                 <Tag 
-                    :value="data.isActive ? 'Active' : 'Inactive'" 
-                    :severity="data.isActive ? 'success' : 'danger'"
+                    :value="data.admission_month" 
+                    :severity="data.admission_month ? 'success' : 'danger'"
                 />
             </template>
         </Column>

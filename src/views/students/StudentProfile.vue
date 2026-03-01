@@ -1,284 +1,229 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import RegistrationService from '@/services/RegistrationService.js';
+import StudentService from '@/service/StudentService.js';
+import PaymentService from '@/service/PaymentService';
+import StudentTransactionTable from '@/components/students/StudentTransactionTable.vue';
+import StudentPaymentTable from '@/components/students/StudentPaymentTable.vue';
+import StudentPaymentTransactionTable from '@/components/students/StudentPaymentTransactionTable.vue';
+import AddTransactionDialog from '@/components/fees/AddTransactionDialog.vue';
+import PaymentInvoiceForm from '@/components/fees/PaymentInvoiceForm.vue';
+import AddPaymentDialog from '@/components/fees/AddPaymentDialog.vue';
+import EditStudentForm from '@/components/students/EditStudentForm.vue';
+import Dialog from 'primevue/dialog';
+
+const props = defineProps({
+    transactions: {
+        type: Array,
+        default: () => []
+    },
+    loading: {
+        type: Boolean,
+        default: false
+    }
+});
 
 const route = useRoute();
 const studentId = route.params.id;
 
-const student = ref(null);
+// const student = ref(null);
+// const studentData = ref(null);
+const studentData = ref([]);
+const parentData = ref([]);
+const payments = ref([]);
+const transactions = ref([]);
 const loading = ref(false);
 const activeTab = ref(0);
 
-// Mock student data
-const mockStudent = {
-    id: 'AD1256589',
-    name: 'Janet Daniel',
-    studentNumber: '2026-0001',
-    email: 'janet.daniel@school.edu',
-    phone: '+255 765 432 198',
-    rollNumber: '35013',
-    gender: 'Female',
-    religion: 'Christianity',
-    motherTongue: 'English',
-    dateOfBirth: '2008-03-15',
-    age: 16,
-    admissionDate: '2024-01-15',
-    currentClass: 'Form 2',
-    stream: 'Science',
-    house: 'Red House',
-    status: 'Active',
-    parentInfo: {
-        fatherName: 'John Daniel',
-        fatherPhone: '+255 765 432 197',
-        fatherEmail: 'john.daniel@email.com',
-        motherName: 'Mary Daniel',
-        motherPhone: '+255 765 432 196',
-        motherEmail: 'mary.daniel@email.com',
-        guardianName: '',
-        guardianPhone: '',
-        guardianEmail: ''
-    },
-    parentInfo: [
-        {
-        name: 'John Daniel',
-        phone: '+255 765 432 197',
-        email: 'john.daniel@email.com',
-        relation: 'Father',
-    },
-    {
-        name: 'Jane Daniel',
-        phone: '+255 765 432 198',
-        email: 'jane.daniel@email.com',
-        relation: 'Mother',
-    },
+// Add Transaction Dialog State
+const showAddTransactionDialog = ref(false);
 
-],
-    address: {
-        street: '123 Education Street',
-        city: 'Dar es Salaam',
-        region: 'Kinondoni',
-        postalCode: '12345',
-        country: 'Tanzania'
-    },
-    medical: {
-        bloodGroup: 'O+',
-        allergies: 'Penicillin',
-        conditions: 'None',
-        emergencyContact: '+255 765 432 199'
-    },
-    academic: {
-        previousSchool: 'St. Mary\'s Primary',
-        admissionNumber: 'AD1256589',
-        admissionDate: '2024-01-15',
-        examNumber: 'PS202400123',
-        year: '2024',
-        subjects: ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'Kiswahili'],
-        performance: {
-            term1: { gpa: 3.8, rank: 5 },
-            term2: { gpa: 3.9, rank: 3 },
-            term3: { gpa: 4.1, rank: 2 }
-        },
-        exams: [
-            { subject: 'Mathematics', grade: 85, date: '2024-03-15', remarks: 'Excellent performance' },
-            { subject: 'Physics', grade: 78, date: '2024-03-18', remarks: 'Good understanding' },
-            { subject: 'Chemistry', grade: 82, date: '2024-03-20', remarks: 'Needs improvement' },
-            { subject: 'Biology', grade: 88, date: '2024-03-22', remarks: 'Very good' },
-            { subject: 'English', grade: 90, date: '2024-03-25', remarks: 'Outstanding' },
-            { subject: 'Kiswahili', grade: 75, date: '2024-03-28', remarks: 'Satisfactory' }
-        ]
-    },
-    fees: {
-        feeGroups: [
-            {
-                name: 'Tuition Fee',
-                description: 'Regular tuition fees for all classes',
-                type: 'mandatory',
-                totalExpected: 1500000,
-                totalPaid: 1200000,
-                balance: 300000,
-                status: 'Partially Paid'
-            },
-            {
-                name: 'Examination Fee',
-                description: 'Fees for internal and external examinations',
-                type: 'mandatory',
-                totalExpected: 500000,
-                totalPaid: 500000,
-                balance: 0,
-                status: 'Paid'
-            },
-            {
-                name: 'Library Fee',
-                description: 'Library access and book borrowing fees',
-                type: 'mandatory',
-                totalExpected: 100000,
-                totalPaid: 100000,
-                balance: 0,
-                status: 'Paid'
-            },
-            {
-                name: 'Sports Fee',
-                description: 'Sports equipment and facility fees',
-                type: 'optional',
-                totalExpected: 75000,
-                totalPaid: 0,
-                balance: 75000,
-                status: 'Outstanding'
-            },
-            {
-                name: 'Transport Fee',
-                description: 'School bus transportation fees',
-                type: 'optional',
-                totalExpected: 200000,
-                totalPaid: 200000,
-                balance: 0,
-                status: 'Paid'
-            },
-            {
-                name: 'Lab Fee',
-                description: 'Laboratory equipment and materials fee',
-                type: 'mandatory',
-                totalExpected: 150000,
-                totalPaid: 150000,
-                balance: 0,
-                status: 'Paid'
-            }
-        ],
-        total: 2025000,
-        paid: 1750000,
-        balance: 275000,
-        lastPayment: '2024-01-10',
-        nextDue: '2024-02-10',
-        paymentHistory: [
-            { date: '2024-01-10', description: 'Tuition Fee - Term 1', amount: 500000, method: 'Bank Transfer', status: 'Completed' },
-            { date: '2023-12-15', description: 'Examination Fee - Term 3', amount: 200000, method: 'Cash', status: 'Completed' },
-            { date: '2024-01-05', description: 'Library Fee - Annual', amount: 100000, method: 'Mobile Money', status: 'Completed' },
-            { date: '2023-10-20', description: 'Transport Fee - Term 1', amount: 200000, method: 'Bank Transfer', status: 'Completed' }
-        ]
-    },
-    library: {
-        booksIssued: [
-            { id: 1, title: 'Biology Textbook Form 2', author: 'Ministry of Education', issueDate: '2024-01-15', dueDate: '2024-04-15', image: '/demo/images/product/blue-t-shirt.jpg' },
-            { id: 2, title: 'Chemistry Lab Manual', author: 'Dr. Smith', issueDate: '2024-01-20', dueDate: '2024-04-20', image: '/demo/images/product/game-controller.jpg' },
-            { id: 3, title: 'Mathematics Workbook', author: 'Various Authors', issueDate: '2024-01-25', dueDate: '2024-04-25', image: '/demo/images/product/gold-zipper-container.jpg' }
-        ]
-    },
-    attendance: {
-        present: 145,
-        absent: 8,
-        late: 5,
-        percentage: 92,
-        calendar: [
-            { date: '2024-02-01', day: 1, status: 'present' },
-            { date: '2024-02-02', day: 2, status: 'present' },
-            { date: '2024-02-03', day: 3, status: 'present' },
-            { date: '2024-02-04', day: 4, status: 'weekend' },
-            { date: '2024-02-05', day: 5, status: 'weekend' },
-            { date: '2024-02-06', day: 6, status: 'present' },
-            { date: '2024-02-07', day: 7, status: 'present' },
-            { date: '2024-02-08', day: 8, status: 'late' },
-            { date: '2024-02-09', day: 9, status: 'present' },
-            { date: '2024-02-10', day: 10, status: 'present' },
-            { date: '2024-02-11', day: 11, status: 'weekend' },
-            { date: '2024-02-12', day: 12, status: 'weekend' },
-            { date: '2024-02-13', day: 13, status: 'present' },
-            { date: '2024-02-14', day: 14, status: 'present' },
-            { date: '2024-02-15', day: 15, status: 'absent' },
-            { date: '2024-02-16', day: 16, status: 'present' },
-            { date: '2024-02-17', day: 17, status: 'present' },
-            { date: '2024-02-18', day: 18, status: 'weekend' },
-            { date: '2024-02-19', day: 19, status: 'weekend' },
-            { date: '2024-02-20', day: 20, status: 'present' },
-            { date: '2024-02-21', day: 21, status: 'present' },
-            { date: '2024-02-22', day: 22, status: 'late' },
-            { date: '2024-02-23', day: 23, status: 'present' },
-            { date: '2024-02-24', day: 24, status: 'present' },
-            { date: '2024-02-25', day: 25, status: 'weekend' },
-            { date: '2024-02-26', day: 26, status: 'weekend' },
-            { date: '2024-02-27', day: 27, status: 'present' },
-            { date: '2024-02-28', day: 28, status: 'present' },
-            { date: '2024-02-29', day: 29, status: 'present' }
-        ]
-    },
-    timetable: [
-        {
-            time: '07:30 - 08:30',
-            monday: { subject: 'Mathematics', teacher: 'Mr. Johnson', room: 'Room 101' },
-            tuesday: { subject: 'Physics', teacher: 'Dr. Smith', room: 'Lab 201' },
-            wednesday: { subject: 'Chemistry', teacher: 'Ms. Davis', room: 'Lab 202' },
-            thursday: { subject: 'Biology', teacher: 'Mrs. Brown', room: 'Lab 203' },
-            friday: { subject: 'English', teacher: 'Mr. Wilson', room: 'Room 102' }
-        },
-        {
-            time: '08:45 - 09:45',
-            monday: { subject: 'English', teacher: 'Mr. Wilson', room: 'Room 102' },
-            tuesday: { subject: 'Mathematics', teacher: 'Mr. Johnson', room: 'Room 101' },
-            wednesday: { subject: 'Physics', teacher: 'Dr. Smith', room: 'Lab 201' },
-            thursday: { subject: 'Chemistry', teacher: 'Ms. Davis', room: 'Lab 202' },
-            friday: { subject: 'Kiswahili', teacher: 'Ms. Kimaro', room: 'Room 103' }
-        },
-        {
-            time: '10:00 - 11:00',
-            monday: { subject: 'Biology', teacher: 'Mrs. Brown', room: 'Lab 203' },
-            tuesday: { subject: 'History', teacher: 'Mr. Anderson', room: 'Room 104' },
-            wednesday: { subject: 'Geography', teacher: 'Ms. Taylor', room: 'Room 105' },
-            thursday: { subject: 'Mathematics', teacher: 'Mr. Johnson', room: 'Room 101' },
-            friday: { subject: 'Physics', teacher: 'Dr. Smith', room: 'Lab 201' }
-        },
-        {
-            time: '11:15 - 12:15',
-            monday: { subject: 'Physical Education', teacher: 'Mr. Martinez', room: 'Sports Field' },
-            tuesday: { subject: 'Biology', teacher: 'Mrs. Brown', room: 'Lab 203' },
-            wednesday: { subject: 'English', teacher: 'Mr. Wilson', room: 'Room 102' },
-            thursday: { subject: 'Computer Studies', teacher: 'Ms. Lee', room: 'Computer Lab' },
-            friday: { subject: 'Chemistry', teacher: 'Ms. Davis', room: 'Lab 202' }
-        },
-        {
-            time: '13:30 - 14:30',
-            monday: { subject: 'Kiswahili', teacher: 'Ms. Kimaro', room: 'Room 103' },
-            tuesday: { subject: 'Computer Studies', teacher: 'Ms. Lee', room: 'Computer Lab' },
-            wednesday: { subject: 'Physical Education', teacher: 'Mr. Martinez', room: 'Sports Field' },
-            thursday: { subject: 'History', teacher: 'Mr. Anderson', room: 'Room 104' },
-            friday: { subject: 'Biology', teacher: 'Mrs. Brown', room: 'Lab 203' }
-        },
-        {
-            time: '14:45 - 15:45',
-            monday: { subject: 'Geography', teacher: 'Ms. Taylor', room: 'Room 105' },
-            tuesday: { subject: 'Kiswahili', teacher: 'Ms. Kimaro', room: 'Room 103' },
-            wednesday: { subject: 'Computer Studies', teacher: 'Ms. Lee', room: 'Computer Lab' },
-            thursday: { subject: 'Physical Education', teacher: 'Mr. Martinez', room: 'Sports Field' },
-            friday: { subject: 'Mathematics', teacher: 'Mr. Johnson', room: 'Room 101' }
-        }
-    ]
+// Rejection Dialog State
+const showRejectionDialog = ref(false);
+const rejectingTransaction = ref(null);
+const rejectionReason = ref('');
+
+// Add Payment Invoice Dialog State
+const showAddPaymentDialog = ref(false);
+const addPaymentDialogRef = ref(null);
+
+// Edit Student State
+const isEditingStudent = ref(false);
+
+// Filters
+const filters = ref({
+    global: { value: null, matchMode: 'contains' },
+    student_name: { value: null, matchMode: 'contains' },
+    invoice_number: { value: null, matchMode: 'contains' },
+    fee_group_name: { value: null, matchMode: 'contains' },
+    status: { value: null, matchMode: 'equals' }
+});
+
+const globalFilterFields = ['student_name', 'invoice_number', 'fee_group_name', 'status', 'totalAmount', 'totalPaid', 'balance'];
+
+// Edit Student Functions
+const startEditingStudent = () => {
+    isEditingStudent.value = true;
 };
+
+const cancelEditingStudent = () => {
+    isEditingStudent.value = false;
+};
+
+const handleStudentUpdate = async (formData) => {
+    // Refresh student data after update
+    await loadStudent();
+    isEditingStudent.value = false;
+};
+
+function clearFilter() {
+    filters.value = {
+        global: { value: null, matchMode: 'contains' },
+        student_name: { value: null, matchMode: 'contains' },
+        invoice_number: { value: null, matchMode: 'contains' },
+        fee_group_name: { value: null, matchMode: 'contains' },
+        status: { value: null, matchMode: 'equals' }
+    };
+}
+
+const selectedPayment = ref(null);
 
 onMounted(async () => {
     loading.value = true;
-    try {
-        // In real app, fetch student data
-        // const studentData = await RegistrationService.getStudentProfile(studentId);
-        // student.value = studentData;
+    loadStudentPayments()
+    loadStudentInfo()
+    loadStudentTransactions()
 
-        // For now, use mock data
-        student.value = mockStudent;
+});
+
+async function loadStudentPayments() {
+    try {
+        const response = await PaymentService.getStudentPayment(studentId);
+        console.log(response)
+        payments.value = response.map(payment => {
+            // 1. Calculate Total Paid (Sum of transactions)
+            const totalPaid = payment.transactions.reduce((sum, txn) => {
+                // Integrity Check: Only count verified or completed money
+                return sum + parseFloat(txn.amount_paid || 0);
+            }, 0);
+
+            // 2. Get the expected amount from fee structure
+            const totalDue = parseFloat(payment.fee_structure?.amount || 0);
+            const balance = totalDue - totalPaid;
+
+            // 3. Determine Status
+            let statusLabel = 'Pending';
+            let statusClass = 'status-pending';
+
+            if (balance <= 0) {
+                statusLabel = 'Fully Paid';
+                statusClass = 'status-paid';
+            } else if (totalPaid > 0) {
+                statusLabel = 'Partial';
+                statusClass = 'status-partial';
+            }
+
+            return {
+                ...payment,
+                totalPaid,
+                balance,
+                statusLabel,
+                statusClass
+            };
+        });
+        // console.log('Payments', payments.value)
     } catch (error) {
-        console.error('Failed to load student profile:', error);
+        console.error('Failed to load payments:', error);
     } finally {
         loading.value = false;
     }
-});
+}
+
+async function loadStudentInfo() {
+    try {
+        // Load actual student data from backend
+        const response = await StudentService.getStudent(studentId);
+        studentData.value = response;
+        // student.value = mockStudent;
+        console.log('Student data loaded:', response);
+    } catch (error) {
+        console.error('Failed to load student profile:', error);
+        // Fallback to mock data if backend fails
+        // student.value = mockStudent;
+    } finally {
+        loading.value = false;
+    }
+}
+
+async function loadParentData() {
+    try {
+        // Load actual student data from backend
+        parentData.value = await StudentService.getStudent(studentId);
+        console.log('Parent data loaded:', parentData.value);
+    } catch (error) {
+        console.error('Failed to load parent data:', error);
+        // Fallback to mock data if backend fails
+        // student.value = mockStudent;
+    } finally {
+        loading.value = false;
+    }
+}
+
+async function loadStudentTransactions() {
+    try {
+        transactions.value = await PaymentService.getStudentTransaction(studentId);
+        console.log('Set transactions:', transactions.value);
+    } catch (error) {
+        console.error('Failed to load transactions:', error);
+    } finally {
+        loading.value = false;
+    }
+}
 
 const age = computed(() => {
-    if (!student.value?.dateOfBirth) return '';
-    const birthYear = new Date(student.value.dateOfBirth).getFullYear();
+    if (!studentData.value?.date_of_birth) return '';
+    const birthYear = new Date(studentData.value.date_of_birth).getFullYear();
     const currentYear = new Date().getFullYear();
     return currentYear - birthYear;
 });
 
+const processedPayments = computed(() => {
+        return payments.value.map(payment => {
+            // 1. Calculate Total Paid (Sum of transactions)
+            const totalPaid = payment.transactions.reduce((sum, txn) => {
+                // Integrity Check: Only count verified or completed money
+                return sum + parseFloat(txn.amount_paid || 0);
+            }, 0);
+
+            // 2. Get the expected amount from fee structure
+            const totalDue = parseFloat(payment.fee_structure?.amount || 0);
+            const balance = totalDue - totalPaid;
+
+            // 3. Determine Status
+            let statusLabel = 'Pending';
+            let statusClass = 'status-pending';
+
+            if (balance <= 0) {
+                statusLabel = 'Fully Paid';
+                statusClass = 'status-paid';
+            } else if (totalPaid > 0) {
+                statusLabel = 'Partial';
+                statusClass = 'status-partial';
+            }
+
+            return {
+                ...payment,
+                totalPaid,
+                balance,
+                statusLabel,
+                statusClass
+            };
+        });
+});
+
 const feeStatus = computed(() => {
-    if (!student.value?.fees) return '';
-    const percentage = (student.value.fees.paid / student.value.fees.total) * 100;
+    if (!studentData.value?.fees?.total || !studentData.value?.fees?.paid) return 'N/A';
+    const percentage = (studentData.value.fees.paid / studentData.value.fees.total) * 100;
     if (percentage === 100) return 'Paid';
     if (percentage >= 75) return 'Mostly Paid';
     if (percentage >= 50) return 'Partially Paid';
@@ -286,8 +231,12 @@ const feeStatus = computed(() => {
 });
 
 const attendanceStatus = computed(() => {
-    if (!student.value?.attendance) return '';
-    const percentage = student.value.attendance.percentage;
+    if (!studentData.value?.attendance_records || !studentData.value?.attendance_records.length) return { text: 'N/A', color: 'secondary' };
+    // For now, we'll calculate basic attendance from records
+    const totalRecords = studentData.value.attendance_records.length;
+    const presentRecords = studentData.value.attendance_records.filter(record => record.status === 'present').length;
+    const percentage = totalRecords > 0 ? (presentRecords / totalRecords) * 100 : 0;
+
     if (percentage >= 95) return { text: 'Excellent', color: 'success' };
     if (percentage >= 85) return { text: 'Good', color: 'info' };
     if (percentage >= 75) return { text: 'Fair', color: 'warning' };
@@ -308,6 +257,158 @@ const getStatusSeverity = (status) => {
             return 'secondary';
     }
 };
+
+// Handle Add Payment Inovice
+function handleAddPayment() {
+    studentData.value = studentData.value;
+    showAddPaymentDialog.value = true;
+}
+
+// Handle Add Transaction
+function handleAddTransaction(paymentData) {
+    selectedPayment.value = paymentData;
+    showAddTransactionDialog.value = true;
+}
+
+// Handle View Receipt
+function handleViewReceipt(transactionData) {
+    console.log('Viewing receipt for transaction:', transactionData);
+    // Open receipt dialog or generate statement
+    // You can implement the receipt viewing logic here
+    // For now, we'll just log it
+}
+
+// Handle View Bank Receipt
+function viewBankReceipt(transaction) {
+    // Open bank receipt file in new window
+    if (transaction.transaction_reciept) {
+        const receiptUrl = `http://localhost:8080/storage/${transaction.transaction_reciept}`;
+        window.open(receiptUrl, '_blank');
+    }
+}
+
+// Handle Print System Receipt
+function printSystemReceipt(transaction) {
+    // Generate and print system receipt from backend
+    PaymentService.generateReceipt(transaction.id)
+        .then(response => {
+            const receiptContent = response.receipt_html; // PaymentService already returns response.data.data
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(receiptContent);
+            printWindow.document.close();
+            printWindow.print();
+        })
+        .catch(error => {
+            console.error('Failed to generate receipt:', error);
+        });
+}
+
+// Handle Approve Transaction
+function handleApproveTransaction(transactionData) {
+    console.log('Approving transaction:', transactionData);
+    PaymentService.approveTransaction(transactionData.id)
+        .then(response => {
+            console.log('Transaction approved:', response);
+            // Refresh payments data to show updated status
+            loadStudentPayments();
+        })
+        .catch(error => {
+            console.error('Failed to approve transaction:', error);
+        });
+}
+
+// Handle Reject Transaction
+function handleRejectTransaction(transactionData) {
+    rejectingTransaction.value = transactionData;
+    rejectionReason.value = '';
+    showRejectionDialog.value = true;
+}
+
+// Confirm Rejection
+function confirmRejection() {
+    if (!rejectionReason.value.trim()) {
+        // You can add toast notification here
+        return;
+    }
+
+    PaymentService.rejectTransaction(rejectingTransaction.value.id, rejectionReason.value)
+        .then(response => {
+            console.log('Transaction rejected:', response);
+            showRejectionDialog.value = false;
+            rejectingTransaction.value = null;
+            rejectionReason.value = '';
+            // Refresh payments data to show updated status
+            loadStudentPayments();
+        })
+        .catch(error => {
+            console.error('Failed to reject transaction:', error);
+        });
+}
+
+// Cancel Rejection
+function cancelRejection() {
+    showRejectionDialog.value = false;
+    rejectingTransaction.value = null;
+    rejectionReason.value = '';
+}
+
+// Handle Transaction Submit
+function handleTransactionSubmit(transactionData) {
+    console.log('Adding transaction:', transactionData);
+    loading.value = true;
+
+    PaymentService.addTransaction(transactionData)
+        .then(response => {
+            console.log('Transaction added successfully:', response);
+            // Refresh payments data
+            loadStudentPayments();
+            loadStudentTransactions();
+            // Show success message
+            // You can add toast notification here if you have toast service
+            showAddTransactionDialog.value = false;
+            selectedPayment.value = null;
+        })
+        .catch(error => {
+            console.error('Error adding transaction:', error);
+            // Show error message
+            // You can add error toast here if you have toast service
+        })
+        .finally(() => {
+            loading.value = false;
+        });
+}
+
+// Handle Payment Submit (for new payment invoices)
+function handlePaymentSubmit(paymentData) {
+    console.log('Adding payment invoice/transaction:', paymentData);
+    loading.value = true;
+
+    PaymentService.addTransaction(paymentData)
+        .then(response => {
+            console.log('Payment/transaction added successfully:', response);
+            // Refresh payments data
+            loadStudentPayments();
+            loadStudentTransactions();
+            // Show success message
+            // You can add toast notification here if you have toast service
+            showAddPaymentDialog.value = false;
+            // Notify dialog of success
+            if (addPaymentDialogRef.value) {
+                addPaymentDialogRef.value.handleSuccess(response);
+            }
+        })
+        .catch(error => {
+            console.error('Error adding payment/transaction:', error);
+            // Notify dialog of error
+            if (addPaymentDialogRef.value) {
+                addPaymentDialogRef.value.handleError(error);
+            }
+        })
+        .finally(() => {
+            loading.value = false;
+        });
+}
+
 </script>
 
 
@@ -318,77 +419,91 @@ const getStatusSeverity = (status) => {
             <!-- <h5 class="m-0">Student Profile</h5> -->
         </div>
 
-        <div v-if="loading" class="flex justify-content-center">
+        <div v-if="!studentData" class="flex justify-content-center">
             <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s" />
         </div>
 
-        <div v-else-if="student">
-            <!-- Student Basic Info Card (Full Width) -->
-            <div class="col-12 mb-6">
-                <div class="card p-fluid">
-                    <div class="flex flex-column md:flex-row align-items-start md:align-items-start text-center md:text-left mb-4">
-                        <div class="flex flex-column align-items-center text-center md:mr-6">
-                            <OverlayBadge :value="student.status" severity="success">
-                                <img src="/public/demo/images/logo.svg" alt="Student" style="border-radius: 20px;" class="w-10rem h-10rem shadow-2 border-circle mb-3" />
-                                <span class="text-900 font-bold text-sm block mb-1">{{ student.name }}</span>
-                                <span class="text-900 font-bold text-lgd">{{ student.studentNumber }}</span>
-                            </OverlayBadge>
-                        </div>
-                        <div class="flex flex-column flex-1">
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <div class="text-center p-4 border-1 surface-border border-round">
-                                    <i class="pi pi-id-card text-2xl text-primary mb-2"></i>
-                                    <span class="text-500 font-medium text-sm block mb-1">Roll No</span>
-                                    <span class="text-900 font-bold text-lg">{{ student.rollNumber }}</span>
-                                </div>
-                                <div class="text-center p-4 border-1 surface-border border-round">
-                                    <i class="pi pi-user text-2xl text-primary mb-2"></i>
-                                    <span class="text-500 font-medium text-sm block mb-1">Gender</span>
-                                    <span class="text-900 font-bold text-lg">{{ student.gender }}</span>
-                                </div>
-                                <div class="text-center p-4 border-1 surface-border border-round">
-                                    <i class="pi pi-calendar text-2xl text-primary mb-2"></i>
-                                    <span class="text-500 font-medium text-sm block mb-1">Age</span>
-                                    <span class="text-900 font-bold text-lg">{{ age }} years</span>
-                                </div>
-                                <div class="text-center p-4 border-1 surface-border border-round">
-                                    <i class="pi pi-book text-2xl text-primary mb-2"></i>
-                                    <span class="text-500 font-medium text-sm block mb-1">Class</span>
-                                    <span class="text-900 font-bold text-lg">{{ student.currentClass }} - {{ student.stream }}</span>
-                                </div>
-                                <div class="text-center p-4 border-1 surface-border border-round">
-                                    <i class="pi pi-home text-2xl text-primary mb-2"></i>
-                                    <span class="text-500 font-medium text-sm block mb-1">House</span>
-                                    <span class="text-900 font-bold text-lg">{{ student.house }}</span>
-                                </div>
-                                <div class="text-center p-4 border-1 surface-border border-round">
-                                    <i class="pi pi-money-bill text-2xl text-green-500 mb-2"></i>
-                                    <span class="text-500 font-medium text-sm block mb-1">Total Fees</span>
-                                    <span class="text-900 font-bold text-lg">TZS {{ student.fees.total.toLocaleString() }}</span>
-                                </div>
-                                <div class="text-center p-4 border-1 surface-border border-round">
-                                    <i class="pi pi-check-circle text-2xl text-green-500 mb-2"></i>
-                                    <span class="text-500 font-medium text-sm block mb-1">Fees Paid</span>
-                                    <span class="text-900 font-bold text-lg">TZS {{ student.fees.paid.toLocaleString() }}</span>
-                                </div>
-                                <div class="text-center p-4 border-1 surface-border border-round">
-                                    <i class="pi pi-exclamation-triangle text-2xl text-orange-500 mb-2"></i>
-                                    <span class="text-500 font-medium text-sm block mb-1">Balance</span>
-                                    <span class="text-900 font-bold text-lg">TZS {{ student.fees.balance.toLocaleString() }}</span>
+        <div v-else>
+            <!-- Show Edit Form when editing -->
+            <div v-if="isEditingStudent">
+                <div class="flex align-items-center mb-4">
+                    <Button icon="pi pi-arrow-left" label="Back to Profile" class="p-button-text" @click="cancelEditingStudent" />
+                </div>
+                <EditStudentForm
+                    :studentData="studentData"
+                    @save="handleStudentUpdate"
+                    @close="cancelEditingStudent"
+                />
+            </div>
+
+            <!-- Show Profile when not editing -->
+            <div v-else>
+                <!-- Student Basic Info Card (Full Width) -->
+                <div class="col-12 mb-6">
+                    <div class="card p-fluid">
+                        <div class="flex flex-column md:flex-row align-items-start md:align-items-start text-center md:text-left mb-4">
+                            <div class="flex flex-column align-items-center text-center md:mr-6">
+                                <OverlayBadge :value="studentData.status" severity="success">
+                                    <img :src="studentData.profile_image || '/demo/images/logo.svg'" alt="Student" style="border-radius: 20px;" class="w-10rem h-10rem shadow-2 border-circle mb-3" />
+                                    <span class="text-900 font-bold text-sm block mb-1">{{ `${studentData.first_name} ${studentData.middle_name} ${studentData.last_name}` }}</span>
+                                    <!-- <span class="text-900 font-bold text-lgd">{{ student.student_number }}</span> -->
+                                </OverlayBadge>
+                            </div>
+                            <div class="flex flex-column flex-1">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div class="text-center p-4 border-1 surface-border border-round">
+                                        <i class="pi pi-id-card text-2xl text-primary mb-2"></i>
+                                        <span class="text-500 font-medium text-sm block mb-1">Student Number</span>
+                                        <span class="text-900 font-bold text-lg">{{ studentData.student_number }}</span>
+                                    </div>
+                                    <div class="text-center p-4 border-1 surface-border border-round">
+                                        <i class="pi pi-user text-2xl text-primary mb-2"></i>
+                                        <span class="text-500 font-medium text-sm block mb-1">Gender</span>
+                                        <span class="text-900 font-bold text-lg">{{ studentData.gender }}</span>
+                                    </div>
+                                    <div class="text-center p-4 border-1 surface-border border-round">
+                                        <i class="pi pi-calendar text-2xl text-primary mb-2"></i>
+                                        <span class="text-500 font-medium text-sm block mb-1">Age</span>
+                                        <span class="text-900 font-bold text-lg">{{ age }} years</span>
+                                    </div>
+                                    <div class="text-center p-4 border-1 surface-border border-round">
+                                        <i class="pi pi-book text-2xl text-primary mb-2"></i>
+                                        <span class="text-500 font-medium text-sm block mb-1">Class</span>
+                                        <span class="text-900 font-bold text-lg">{{ studentData.class_level?.class_level_name || 'N/A' }} - {{ studentData.class_level_stream?.class_level_stream_name || 'N/A' }}</span>
+                                    </div>
+                                    <div class="text-center p-4 border-1 surface-border border-round">
+                                        <i class="pi pi-home text-2xl text-primary mb-2"></i>
+                                        <span class="text-500 font-medium text-sm block mb-1">House</span>
+                                        <span class="text-900 font-bold text-lg">{{ studentData.house|| 'N/A' }}</span>
+                                    </div>
+                                    <div class="text-center p-4 border-1 surface-border border-round">
+                                        <i class="pi pi-money-bill text-2xl text-green-500 mb-2"></i>
+                                        <span class="text-500 font-medium text-sm block mb-1">Total Fees</span>
+                                        <span class="text-900 font-bold text-lg">TZS {{ studentData.fees?.total?.toLocaleString() || 'N/A' }}</span>
+                                    </div>
+                                    <div class="text-center p-4 border-1 surface-border border-round">
+                                        <i class="pi pi-check-circle text-2xl text-green-500 mb-2"></i>
+                                        <span class="text-500 font-medium text-sm block mb-1">Fees Paid</span>
+                                        <span class="text-900 font-bold text-lg">TZS {{ studentData.fees?.paid?.toLocaleString() || 'N/A' }}</span>
+                                    </div>
+                                    <div class="text-center p-4 border-1 surface-border border-round">
+                                        <i class="pi pi-exclamation-triangle text-2xl text-orange-500 mb-2"></i>
+                                        <span class="text-500 font-medium text-sm block mb-1">Balance</span>
+                                        <span class="text-900 font-bold text-lg">TZS {{ studentData.fees?.balance?.toLocaleString() || 'N/A' }}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="ml-auto">
-                            <Button label="Edit Profile" icon="pi pi-user" class="p-button-outlined p-button-sm" />
+                            <div class="ml-auto">
+                                <Button label="Edit Profile" icon="pi pi-user" class="p-button-outlined p-button-sm" @click="startEditingStudent" />
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Detailed Information Tabs (Full Width) -->
-            <div class="col-12">
-                <div class="card h-full">
-                    <TabView v-model:activeTab="activeTab" class="h-full">
+                <!-- Detailed Information Tabs (Full Width) -->
+                <div class="col-12">
+                    <div class="card h-full">
+                        <TabView v-model:activeTab="activeTab" class="h-full">
                         <!-- Personal Information Tab -->
                         <TabPanel header="Personal Information" class="p-4">
                             <!-- Parents Information Section (Full Width) -->
@@ -401,7 +516,7 @@ const getStatusSeverity = (status) => {
                                         </div>
                                     </div>
 
-                                    <div v-for="parent in student.parentInfo" :key="parent.name" class="col-12">
+                                    <div v-for="parent in parentData" :key="parent.name" class="col-12">
                                         <div class="flex flex-col md:flex-row align-items-start md:align-items-center justify-content-between p-4 border-1 surface-border border-round mb-3 bg-white hover:surface-100 transition-colors">
                                             <!-- Parent Name and Relation -->
                                             <div class="flex align-items-center mb-3 md:mb-0 md:mr-6">
@@ -480,8 +595,8 @@ const getStatusSeverity = (status) => {
                                     <div class="mb-4">
                                         <label class="text-500 font-bold text-xs uppercase block mb-2">Current Address</label>
                                         <div class="p-3 bg-gray-100 border-round text-900 line-height-3">
-                                            {{ student.address.street }}<br>
-                                            {{ student.address.city }}, {{ student.address.region }}
+                                            {{ studentData.address?.street || 'N/A' }}<br>
+                                            {{ studentData.address?.city || 'N/A' }}, {{ studentData.address?.region || 'N/A' }}
                                         </div>
                                     </div>
                                 </div>
@@ -502,14 +617,28 @@ const getStatusSeverity = (status) => {
                                             <label class="text-500 font-bold text-xs uppercase block mb-1">Blood Group</label>
                                             <div class="flex align-items-center gap-2">
                                                 <i class="pi pi-heart text-red-500"></i>
-                                                <span class="text-red-600 font-bold text-xl">{{ student.medical.bloodGroup }}</span>
+                                                <span class="text-red-600 font-bold text-xl">{{ studentData.medical?.bloodGroup || 'N/A' }}</span>
                                             </div>
                                         </div>
                                         <div>
                                             <label class="text-500 font-bold text-xs uppercase block mb-1">Allergies</label>
                                             <div class="flex align-items-center gap-2">
                                                 <i class="pi pi-exclamation-triangle text-orange-500"></i>
-                                                <span class="text-900 font-bold">{{ student.medical.allergies }}</span>
+                                                <span class="text-900 font-bold">{{ studentData.medical?.allergies || 'N/A' }}</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="text-500 font-bold text-xs uppercase block mb-1">Medical Conditions</label>
+                                            <div class="flex align-items-center gap-2">
+                                                <i class="pi pi-notes text-blue-500"></i>
+                                                <span class="text-900 font-bold">{{ studentData.medical?.conditions || 'N/A' }}</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="text-500 font-bold text-xs uppercase block mb-1">Emergency Contact</label>
+                                            <div class="flex align-items-center gap-2">
+                                                <i class="pi pi-phone text-green-500"></i>
+                                                <span class="text-900 font-bold">{{ studentData.medical?.emergencyContact || 'N/A' }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -517,83 +646,96 @@ const getStatusSeverity = (status) => {
                             </div>
                         </TabPanel>
 
-                        <!-- Academic Information Tab -->
                         <TabPanel header="Academic Information" class="p-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <!-- Admission Details -->
-                                <div class="bg-surface-50 dark:bg-surface-950 p-6 rounded-2xl">
-                                    <div class="flex items-center gap-3 mb-4">
-                                        <i class="pi pi-id-card text-2xl text-primary"></i>
-                                        <h6 class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">Admission Details</h6>
+                            <div class="bg-surface-50 dark:bg-surface-950 mb-6">
+                                <div class="bg-surface-0 dark:bg-surface-900 p-6 shadow rounded-2xl flex flex-col gap-4">
+                                    <div class="flex gap-4">
+                                        <div class="flex flex-col gap-2 flex-1">
+                                            <div class="text-2xl leading-tight font-semibold text-surface-900 dark:text-surface-0">Admission Details</div>
+                                            <div class="text-base leading-tight text-surface-500 dark:text-surface-300">Enrollment and registration history</div>
+                                        </div>
                                     </div>
-                                    <div class="space-y-3">
-                                        <div class="flex justify-content-between">
-                                            <span class="text-500 font-medium">Admission Number:</span>
-                                            <span class="text-900 font-bold">{{ student.admissionNumber }}</span>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="p-3 border-1 surface-border border-round">
+                                            <label class="text-500 font-bold text-xs uppercase block mb-1">Admission Number</label>
+                                            <div class="flex align-items-center gap-2">
+                                                <i class="pi pi-id-card text-primary"></i>
+                                                <span class="text-900 font-bold">{{ studentData.admission_number || 'N/A' }}</span>
+                                            </div>
                                         </div>
-                                        <div class="flex justify-content-between">
-                                            <span class="text-500 font-medium">Admission Date:</span>
-                                            <span class="text-900 font-bold">{{ student.admissionDate }}</span>
+                                        <div class="p-3 border-1 surface-border border-round">
+                                            <label class="text-500 font-bold text-xs uppercase block mb-1">Admission Date</label>
+                                            <div class="flex align-items-center gap-2">
+                                                <i class="pi pi-calendar text-primary"></i>
+                                                <span class="text-900 font-bold">{{ studentData.admission_date || 'N/A' }}</span>
+                                            </div>
                                         </div>
-                                        <div class="flex justify-content-between">
-                                            <span class="text-500 font-medium">Previous School:</span>
-                                            <span class="text-900 font-bold">{{ student.academic.previousSchool }}</span>
+                                        <div class="p-3 border-1 surface-border border-round">
+                                            <label class="text-500 font-bold text-xs uppercase block mb-1">Previous School</label>
+                                            <div class="flex align-items-center gap-2">
+                                                <i class="pi pi-building text-primary"></i>
+                                                <span class="text-900 font-bold">{{ studentData.academic?.previousSchool || 'N/A' }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <!-- Current Class -->
-                                <div class="bg-surface-50 dark:bg-surface-950 p-6 rounded-2xl">
-                                    <div class="flex items-center gap-3 mb-4">
-                                        <i class="pi pi-book text-2xl text-primary"></i>
-                                        <h6 class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">Current Class</h6>
-                                    </div>
-                                    <div class="space-y-3">
-                                        <div class="flex justify-content-between">
-                                            <span class="text-500 font-medium">Class:</span>
-                                            <span class="text-900 font-bold">{{ student.currentClass }} - {{ student.stream }}</span>
+                            <div class="bg-surface-50 dark:bg-surface-950 mb-6">
+                                <div class="bg-surface-0 dark:bg-surface-900 p-6 shadow rounded-2xl flex flex-col gap-4">
+                                    <div class="flex gap-4">
+                                        <div class="flex flex-col gap-2 flex-1">
+                                            <div class="text-2xl leading-tight font-semibold text-surface-900 dark:text-surface-0">Class & Stream</div>
+                                            <div class="text-base leading-tight text-surface-500 dark:text-surface-300">Current academic placement and year</div>
                                         </div>
-                                        <div class="flex justify-content-between">
-                                            <span class="text-500 font-medium">Academic Year:</span>
-                                            <span class="text-900 font-bold">{{ student.academic.year }}</span>
+                                    </div>
+
+                                    <div class="flex flex-column md:flex-row gap-4">
+                                        <div class="flex-1 p-4 bg-primary-50 border-round border-left-3 border-primary">
+                                            <div class="text-primary font-bold text-xs uppercase mb-1">Current Grade</div>
+                                            <div class="text-2xl font-bold text-primary-900">{{ studentData.currentClass }} - {{ studentData.stream }}</div>
+                                        </div>
+                                        <div class="flex-1 p-4 bg-blue-50 border-round border-left-3 border-blue-500">
+                                            <div class="text-blue-500 font-bold text-xs uppercase mb-1">Academic Year</div>
+                                            <div class="text-2xl font-bold text-blue-900">{{ studentData.academic?.year || '2026' }}</div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <!-- Performance -->
-                                <div class="bg-surface-50 dark:bg-surface-950 p-6 rounded-2xl">
-                                    <div class="flex items-center gap-3 mb-4">
-                                        <i class="pi pi-chart-line text-2xl text-primary"></i>
-                                        <h6 class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">Performance</h6>
+                            <div class="bg-surface-50 dark:bg-surface-950">
+                                <div class="bg-surface-0 dark:bg-surface-900 p-6 shadow rounded-2xl flex flex-col gap-4">
+                                    <div class="flex gap-4">
+                                        <div class="flex flex-col gap-2 flex-1">
+                                            <div class="text-2xl leading-tight font-semibold text-surface-900 dark:text-surface-0">Performance Overview</div>
+                                            <div class="text-base leading-tight text-surface-500 dark:text-surface-300">Term-wise GPA and individual subject scores</div>
+                                        </div>
                                     </div>
-                                    <div class="space-y-3">
-                                        <div v-for="(term, index) in ['Term 1', 'Term 2', 'Term 3']" :key="index" class="border-1 surface-border border-round p-3">
-                                            <div class="flex justify-content-between mb-2">
-                                                <span class="text-500 font-medium">{{ term }}</span>
-                                                <div class="flex gap-4">
-                                                    <span class="text-sm">GPA: <strong>{{ student.academic.performance[`term${index + 1}`].gpa }}</strong></span>
-                                                    <span class="text-sm">Rank: <strong>{{ student.academic.performance[`term${index + 1}`].rank }}</strong></span>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                                        <div v-for="(term, index) in ['Term 1', 'Term 2', 'Term 3']" :key="index" 
+                                            class="flex justify-content-between align-items-center p-3 border-1 surface-border border-round bg-white">
+                                            <span class="font-bold text-700">{{ term }}</span>
+                                            <div class="text-right">
+                                                <div class="text-xl font-bold text-primary">GPA: {{ studentData.academic?.performance?.[`term${index + 1}`]?.gpa || '0.0' }}</div>
+                                                <div class="text-xs text-500">Rank: {{ studentData.academic?.performance?.[`term${index + 1}`]?.rank || '-' }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-column gap-2">
+                                        <div v-for="exam in studentData.academic?.exams || []" :key="exam.subject" 
+                                            class="flex align-items-center justify-content-between p-3 surface-50 border-round border-1 surface-border hover:surface-100 transition-colors">
+                                            <div class="flex align-items-center gap-3">
+                                                <i class="pi pi-file-edit text-xl text-primary"></i>
+                                                <div>
+                                                    <div class="text-900 font-bold">{{ exam.subject }}</div>
+                                                    <div class="text-xs text-500">{{ exam.date }} | {{ exam.remarks }}</div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Exams -->
-                                <div class="bg-surface-50 dark:bg-surface-950 p-6 rounded-2xl">
-                                    <div class="flex items-center gap-3 mb-4">
-                                        <i class="pi pi-file-edit text-2xl text-primary"></i>
-                                        <h6 class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">Exams</h6>
-                                    </div>
-                                    <div class="space-y-3">
-                                        <div v-for="exam in student.academic.exams" :key="exam.subject" class="border-1 surface-border border-round p-3">
-                                            <div class="flex justify-content-between mb-2">
-                                                <span class="text-500 font-medium">{{ exam.subject }}</span>
-                                                <span class="font-bold" :class="exam.grade >= 70 ? 'text-green-600' : 'text-orange-500'">{{ exam.grade }}%</span>
-                                            </div>
-                                            <div class="text-sm text-500">
-                                                <span>Date: {{ exam.date }}</span>
-                                                <span class="ml-4">Remarks: {{ exam.remarks }}</span>
+                                            <div class="text-right">
+                                                <span class="text-xl font-bold" :class="exam.grade >= 70 ? 'text-green-600' : 'text-orange-500'">{{ exam.grade }}%</span>
                                             </div>
                                         </div>
                                     </div>
@@ -605,101 +747,42 @@ const getStatusSeverity = (status) => {
                         <TabPanel header="Fees & Payments" class="p-4">
                             <!-- Fee Groups Table -->
                             <div class="bg-surface-0 dark:bg-surface-900 p-6 rounded-2xl mb-6">
-                                <div class="flex justify-content-between align-items-center mb-4">
-                                    <h6 class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">Fee Groups</h6>
+                                <div class="flex justify-between items-center mb-4">
+                                    <h6 class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">Payments</h6>
                                     <div class="flex gap-2">
-                                        <Button label="Add Payment" icon="pi pi-plus" class="p-button-primary" size="small" />
-                                        <Button label="Print Receipt" icon="pi pi-print" class="p-button-outlined" size="small" />
+                                        <Button label="Add Payment Invoice" @click="handleAddPayment" icon="pi pi-plus" class="p-button-primary" size="small" />
+                                        <!-- <Button label="Print Receipt" icon="pi pi-print" class="p-button-outlined" size="small" /> -->
                                     </div>
                                 </div>
 
-                                <DataTable :value="student.fees.feeGroups" class="p-datatable-sm">
-                                    <Column field="name" header="Fee Group" sortable>
-                                        <template #body="{ data }">
-                                            <div class="flex align-items-center">
-                                                <i class="pi pi-money-bill mr-2"></i>
-                                                <span class="font-semibold">{{ data.name }}</span>
-                                            </div>
-                                        </template>
-                                    </Column>
-                                    <Column field="description" header="Description" sortable>
-                                        <template #body="{ data }">
-                                            <span class="text-600 text-sm">{{ data.description }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column field="type" header="Type" sortable>
-                                        <template #body="{ data }">
-                                            <Tag
-                                                :value="data.type === 'mandatory' ? 'Mandatory' : 'Optional'"
-                                                :severity="data.type === 'mandatory' ? 'danger' : 'info'"
-                                            />
-                                        </template>
-                                    </Column>
-                                    <Column field="totalExpected" header="Total Expected" sortable>
-                                        <template #body="{ data }">
-                                            <span class="font-bold text-blue-600">TZS {{ data.totalExpected.toLocaleString() }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column field="totalPaid" header="Total Paid" sortable>
-                                        <template #body="{ data }">
-                                            <span class="font-bold text-green-600">TZS {{ data.totalPaid.toLocaleString() }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column field="balance" header="Balance" sortable>
-                                        <template #body="{ data }">
-                                            <span
-                                                class="font-bold"
-                                                :class="data.balance === 0 ? 'text-green-600' : 'text-orange-600'"
-                                            >
-                                                TZS {{ data.balance.toLocaleString() }}
-                                            </span>
-                                        </template>
-                                    </Column>
-                                    <Column field="status" header="Status" sortable>
-                                        <template #body="{ data }">
-                                            <Tag
-                                                :value="data.status"
-                                                :severity="data.status === 'Paid' ? 'success' : data.status === 'Partially Paid' ? 'warning' : 'danger'"
-                                            />
-                                        </template>
-                                    </Column>
-                                </DataTable>
-                            </div>
-
-                            <!-- Payment History Table -->
-                            <div class="bg-surface-0 dark:bg-surface-900 p-6 rounded-2xl">
-                                <div class="flex justify-content-between align-items-center mb-4">
-                                    <h6 class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">Payment History</h6>
-                                    <Button label="View All" icon="pi pi-external-link" class="p-button-outlined" size="small" />
+                                <!-- Combined Payment & Transaction Table -->
+                                <div v-if="loading" class="flex justify-content-center p-4">
+                                    <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s" />
                                 </div>
+                                <StudentPaymentTransactionTable
+                                    v-else
+                                    :payments="payments"
+                                    :transactions="transactions"
+                                    :loading="loading"
+                                    :filters="filters"
+                                    :global-filter-fields="globalFilterFields"
+                                    @add-transaction="handleAddTransaction"
+                                    @view-bank-receipt="viewBankReceipt"
+                                    @print-system-receipt="printSystemReceipt"
+                                    @approve-transaction="handleApproveTransaction"
+                                    @reject-transaction="handleRejectTransaction"
+                                    @clear-filter="clearFilter"
+                                />
 
-                                <DataTable :value="student.fees.paymentHistory" :paginator="true" class="p-datatable-sm">
-                                    <Column field="date" header="Date" sortable>
-                                        <template #body="{ data }">
-                                            {{ data.date }}
-                                        </template>
-                                    </Column>
-                                    <Column field="description" header="Description" sortable>
-                                        <template #body="{ data }">
-                                            {{ data.description }}
-                                        </template>
-                                    </Column>
-                                    <Column field="amount" header="Amount" sortable>
-                                        <template #body="{ data }">
-                                            TZS {{ data.amount.toLocaleString() }}
-                                        </template>
-                                    </Column>
-                                    <Column field="method" header="Payment Method" sortable>
-                                        <template #body="{ data }">
-                                            {{ data.method }}
-                                        </template>
-                                    </Column>
-                                    <Column field="status" header="Status" sortable>
-                                        <template #body="{ data }">
-                                            <Tag :value="data.status" :severity="data.status === 'Completed' ? 'success' : 'warning'" />
-                                        </template>
-                                    </Column>
-                                </DataTable>
+                                <!-- Payment Invoice Dialog -->
+                                <AddPaymentDialog
+                                    :studentData="studentData"
+                                    :visible="showAddPaymentDialog"
+                                    @update:visible="showAddPaymentDialog = $event"
+                                    @submit="handlePaymentSubmit"
+                                    ref="addPaymentDialogRef"
+                                />
+
                             </div>
                         </TabPanel>
 
@@ -715,7 +798,7 @@ const getStatusSeverity = (status) => {
                                     </div>
                                 </div>
 
-                                <DataTable :value="student.timetable" :paginator="false" class="p-datatable-sm">
+                                <DataTable :value="studentData.timetable" :paginator="false" class="p-datatable-sm">
                                     <Column field="time" header="Time" frozen style="min-width: 120px">
                                         <template #body="{ data }">
                                             <span class="font-bold">{{ data.time }}</span>
@@ -773,7 +856,7 @@ const getStatusSeverity = (status) => {
                         <!-- Library Tab -->
                         <TabPanel header="Library Records" class="p-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <div v-for="book in student.library.booksIssued" :key="book.id" class="col-span-full">
+                                <div v-for="book in studentData.library?.booksIssued || []" :key="book.id" class="col-span-full">
                                     <div class="card p-4 border-1 surface-border border-round hover:shadow-3 transition-all">
                                         <div class="flex justify-content-center mb-3">
                                             <img :src="book.image" :alt="book.title" class="w-full shadow-2 border-round" style="max-height: 150px; object-fit: cover"/>
@@ -794,28 +877,28 @@ const getStatusSeverity = (status) => {
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                                 <div>
                                     <div class="text-center p-4 border-round bg-white shadow-1">
-                                        <div class="text-4xl font-bold" :class="`text-${attendanceStatus.color}`">{{ student.attendance.percentage }}%</div>
+                                        <div class="text-4xl font-bold" :class="`text-${attendanceStatus.color}`">{{ studentData.attendance?.percentage || 0 }}%</div>
                                         <div class="text-lg font-semibold">{{ attendanceStatus.text }}</div>
                                         <div class="text-sm text-500">Attendance Rate</div>
                                     </div>
                                 </div>
                                 <div>
                                     <div class="text-center p-4 border-round bg-white shadow-1">
-                                        <div class="text-4xl font-bold text-900">{{ student.attendance.present }}</div>
+                                        <div class="text-4xl font-bold text-900">{{ studentData.attendance?.present || 0 }}</div>
                                         <div class="text-lg font-semibold">Days Present</div>
                                         <div class="text-sm text-500">This Term</div>
                                     </div>
                                 </div>
                                 <div>
                                     <div class="text-center p-4 border-round bg-white shadow-1">
-                                        <div class="text-4xl font-bold text-500">{{ student.attendance.absent }}</div>
+                                        <div class="text-4xl font-bold text-500">{{ studentData.attendance?.absent || 0 }}</div>
                                         <div class="text-lg font-semibold">Days Absent</div>
                                         <div class="text-sm text-500">This Term</div>
                                     </div>
                                 </div>
                                 <div>
                                     <div class="text-center p-4 border-round bg-white shadow-1">
-                                        <div class="text-4xl font-bold text-orange-500">{{ student.attendance.late }}</div>
+                                        <div class="text-4xl font-bold text-orange-500">{{ studentData.attendance?.late || 0 }}</div>
                                         <div class="text-lg font-semibold">Days Late</div>
                                         <div class="text-sm text-500">This Term</div>
                                     </div>
@@ -823,17 +906,13 @@ const getStatusSeverity = (status) => {
                             </div>
 
                             <!-- Attendance Calendar -->
-                            <div class="bg-surface-0 dark:bg-surface-900 p-6 rounded-2xl">
-                                <div class="flex justify-content-between align-items-center mb-4">
+                            <div class="bg-surface-50 dark:bg-surface-950 p-6 rounded-2xl">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <i class="pi pi-calendar text-2xl text-primary"></i>
                                     <h6 class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">Attendance Calendar</h6>
-                                    <div class="flex gap-2">
-                                        <Button label="Previous Month" icon="pi pi-chevron-left" class="p-button-outlined p-button-sm" />
-                                        <Button label="Current Month" class="p-button-primary p-button-sm" />
-                                        <Button label="Next Month" icon="pi pi-chevron-right" class="p-button-outlined p-button-sm" />
-                                    </div>
                                 </div>
 
-                                <div class="grid grid-cols-7 gap-2 mb-4">
+                                <div class="grid grid-cols-7 gap-2">
                                     <div class="text-center font-bold text-sm p-2 bg-surface-100 border-round">Sun</div>
                                     <div class="text-center font-bold text-sm p-2 bg-surface-100 border-round">Mon</div>
                                     <div class="text-center font-bold text-sm p-2 bg-surface-100 border-round">Tue</div>
@@ -844,7 +923,7 @@ const getStatusSeverity = (status) => {
                                 </div>
 
                                 <div class="grid grid-cols-7 gap-2">
-                                    <div v-for="day in student.attendance.calendar" :key="day.date"
+                                    <div v-for="day in studentData.attendance?.calendar" :key="day.date"
                                          class="text-center p-3 border-round border-1 surface-border cursor-pointer hover:shadow-2 transition-all"
                                          :class="{
                                              'bg-green-100 border-green-300': day.status === 'present',
@@ -887,9 +966,63 @@ const getStatusSeverity = (status) => {
                                 </div>
                             </div>
                         </TabPanel>
+
                     </TabView>
                 </div>
             </div>
         </div>
+        </div>
     </div>
+
+    <!-- Add Transaction Dialog -->
+    <AddTransactionDialog
+        v-model:visible="showAddTransactionDialog"
+        :payment="selectedPayment"
+        @submit="handleTransactionSubmit"
+    />
+
+    <!-- Rejection Dialog -->
+    <Dialog
+        v-model:visible="showRejectionDialog"
+        :style="{ width: '450px' }"
+        header="Reject Transaction"
+        :modal="true"
+        :dismissableMask="true"
+    >
+        <div class="p-4">
+            <div class="mb-4">
+                <label for="rejectionReason" class="block text-900 font-medium mb-2">
+                    Rejection Reason
+                </label>
+                <Textarea
+                    id="rejectionReason"
+                    v-model="rejectionReason"
+                    rows="4"
+                    cols="30"
+                    class="w-full"
+                    placeholder="Please provide a reason for rejecting this transaction..."
+                    :class="{ 'p-invalid': !rejectionReason.trim() }"
+                />
+                <small v-if="!rejectionReason.trim()" class="p-error">
+                    Rejection reason is required.
+                </small>
+            </div>
+
+            <div class="flex justify-end gap-2">
+                <Button
+                    label="Cancel"
+                    icon="pi pi-times"
+                    class="p-button-text"
+                    @click="cancelRejection"
+                />
+                <Button
+                    label="Reject Transaction"
+                    icon="pi pi-check"
+                    class="p-button-danger"
+                    @click="confirmRejection"
+                    :disabled="!rejectionReason.trim()"
+                />
+            </div>
+        </div>
+    </Dialog>
 </template>

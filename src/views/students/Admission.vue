@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import AdmissionStats from '@/components/students/AdmissionStats.vue';
 import AdmissionTable from '@/components/students/AdmissionTable.vue';
 import RegistrationService from '@/services/RegistrationService.js';
+import StudentService from '@/service/StudentService';
 
 // Table data
 const admissions = ref([]);
@@ -15,7 +16,7 @@ onMounted(() => {
 async function loadAdmissions() {
     loading.value = true;
     try {
-        admissions.value = await RegistrationService.getAdmissions();
+        admissions.value = await StudentService.getAdmissions();
     } catch (error) {
         console.error('Failed to load admissions:', error);
     } finally {

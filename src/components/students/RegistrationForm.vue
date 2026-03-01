@@ -35,6 +35,7 @@ const formData = ref({
     gender: '',
     address: '',
     region: '',
+    hear_from_source: '',
     previous_school: '',
     parent_name: '',
     parent_phone: '',
@@ -49,6 +50,21 @@ const formData = ref({
 const genderOptions = [
     { label: 'Male', value: 'male' },
     { label: 'Female', value: 'female' }
+];
+
+const hearFromSourceOptions = [
+    { label: 'Radio', value: 'radio' },
+    { label: 'Website', value: 'website' },
+    { label: 'TV', value: 'tv' },
+    { label: 'Facebook', value: 'facebook' },
+    { label: 'Instagram', value: 'instagram' },
+    { label: 'Twitter', value: 'twitter' },
+    { label: 'WhatsApp', value: 'whatsapp' },
+    { label: 'Friend/Referral', value: 'friend referral' },
+    { label: 'Newspaper', value: 'newspaper' },
+    { label: 'School Event', value: 'school event' },
+    { label: 'Advertisement', value: 'advertisement' },
+    { label: 'Other', value: 'other' }
 ];
 
 const regionOptions = [
@@ -147,6 +163,7 @@ function resetForm() {
         gender: '',
         address: '',
         region: '',
+        hear_from_source: '',
         previous_school: '',
         parent_name: '',
         parent_phone: '',
@@ -268,8 +285,8 @@ defineExpose({
                                 <InputText id="first_name" v-model="formData.first_name" placeholder="Enter first name" required class="w-full" />
                             </div>
                             <div class="col-span-1">
-                                <label for="middle_name" class="block text-900 font-semibold mb-2">Middle Name</label>
-                                <InputText id="middle_name" v-model="formData.middle_name" placeholder="Enter middle name" class="w-full" />
+                                <label for="middle_name" class="block text-900 font-semibold mb-2">Middle Name *</label>
+                                <InputText id="middle_name" v-model="formData.middle_name" placeholder="Enter middle name" required class="w-full" />
                             </div>
                             <div class="col-span-1">
                                 <label for="last_name" class="block text-900 font-semibold mb-2">Last Name *</label>
@@ -330,11 +347,27 @@ defineExpose({
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 mb-2 md:grid-cols-2 gap-4">
                             <div class="col-span-1">
                                 <label for="previous_school" class="block text-900 font-semibold mb-2">Previous School</label>
                                 <InputText id="previous_school" v-model="formData.previous_school" placeholder="Enter previous school" class="w-full" />
                             </div>
+                            <div class="col-span-1">
+                                <label for="hear_from_source" class="block text-900 font-semibold mb-2">How did you hear about us? *</label>
+                                <Dropdown
+                                    id="hear_from_source"
+                                    v-model="formData.hear_from_source"
+                                    :options="hearFromSourceOptions"
+                                    optionValue="value"
+                                    optionLabel="label"
+                                    placeholder="Select option"
+                                    required
+                                    class="w-full"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="col-span-1">
                                 <label for="class_level_id" class="block text-900 font-semibold mb-2">Applied Class *</label>
                                 <Dropdown
@@ -403,16 +436,16 @@ defineExpose({
                         <div class="flex align-items-center mb-2">
                             <i class="pi pi-calendar text-2xl text-primary mr-3"></i>
                             <div>
-                                <h6 class="text-lg font-semibold m-0 text-primary">Registration Details</h6>
-                                <span class="text-600 text-sm">Registration date and administrative information</span>
+                                <h6 class="text-lg font-semibold m-0 text-primary">Registration Fee</h6>
+                                <span class="text-600 text-sm">Registration Fee (TZS 10,000)</span>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div class="col-span-1">
+                            <!-- <div class="col-span-1">
                                 <label for="registration_fee" class="block text-900 font-semibold mb-2">Registration Fee (TZS)</label>
                                 <InputText id="registration_fee" v-model="formData.registration_fee" disabled placeholder="10000" class="w-full" />
-                            </div>
+                            </div> -->
                             <div class="col-span-1">
                                 <label for="payment_method" class="block text-900 font-semibold mb-2">Payment Method *</label>
                                 <Dropdown

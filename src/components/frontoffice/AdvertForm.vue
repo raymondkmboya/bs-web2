@@ -1,10 +1,14 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 
 const props = defineProps({
     visible: {
         type: Boolean,
         default: false
+    },
+    error: {
+        type: String,
+        default: ''
     }
 });
 
@@ -12,34 +16,40 @@ const emit = defineEmits(['update:visible', 'submit', 'close']);
 
 const formData = ref({
     cost: '',
-    medium: 'phone_call',
-    advertDate: new Date(),
-    user: ''
+    medium: 'Phone Call',
+    advert_date: new Date(),
+    description: '',
+    notes: ''
 });
 
 const mediumOptions = [
-    { label: 'Phone Call', value: 'phone_call' },
-    { label: 'Road Posters', value: 'road_posters' },
-    { label: 'Car Posters', value: 'car_posters' },
-    { label: 'Radio', value: 'radio' },
-    { label: 'TV', value: 'tv' },
-    { label: 'Email', value: 'email' },
-    { label: 'SMS', value: 'sms' },
-    { label: 'Social Media', value: 'social_media' },
-    { label: 'Website', value: 'website' },
-    { label: 'Newspaper', value: 'newspaper' }
+    { label: 'Phone Call', value: 'Phone Call' },
+    { label: 'Road Posters', value: 'Road Posters' },
+    { label: 'Car Posters', value: 'Car Posters' },
+    { label: 'Radio', value: 'Radio' },
+    { label: 'TV', value: 'TV' },
+    { label: 'Email', value: 'Email' },
+    { label: 'SMS', value: 'SMS' },
+    { label: 'Social Media', value: 'Social Media' },
+    { label: 'Website', value: 'Website' },
+    { label: 'Newspaper', value: 'Newspaper' },
+    { label: 'Walk In', value: 'Walk In' },
+    { label: 'Referral', value: 'Referral' }
 ];
 
-const userOptions = [
-    { label: 'Alice Johnson', value: 'alice_johnson' },
-    { label: 'Bob Smith', value: 'bob_smith' },
-    { label: 'Carol Davis', value: 'carol_davis' },
-    { label: 'David Wilson', value: 'david_wilson' },
-    { label: 'Eve Brown', value: 'eve_brown' },
-    { label: 'Frank Miller', value: 'frank_miller' },
-    { label: 'Grace Taylor', value: 'grace_taylor' },
-    { label: 'Henry Anderson', value: 'henry_anderson' }
+const statusOptions = [
+    { label: 'Active', value: 'active' },
+    { label: 'Inactive', value: 'inactive' },
+    { label: 'Completed', value: 'completed' }
 ];
+
+// Validation
+const isFormValid = computed(() => {
+    return formData.value.cost &&
+           formData.value.cost > 0 &&
+           formData.value.medium &&
+           formData.value.advert_date;
+});
 
 // Watch for visibility changes
 watch(() => props.visible, (newVal) => {
@@ -51,9 +61,10 @@ watch(() => props.visible, (newVal) => {
 function resetForm() {
     formData.value = {
         cost: '',
-        medium: 'phone_call',
-        advertDate: new Date(),
-        user: ''
+        medium: 'Phone Call',
+        advert_date: new Date(),
+        description: '',
+        notes: ''
     };
 }
 
@@ -62,9 +73,19 @@ function closeDialog() {
 }
 
 function submitForm() {
-    emit('submit', { ...formData.value });
-    resetForm();
-    closeDialog();
+    if (!isFormValid.value) {
+        return; // Don't submit if form is invalid
+    }
+
+    // Format data for submission
+    const submissionData = {
+        ...formData.value,
+        cost: parseFloat(formData.value.cost),
+        advert_date: formData.value.advert_date.toISOString().split('T')[0]
+    };
+
+    emit('submit', submissionData);
+    // Don't reset form or close dialog here - let parent handle success
 }
 </script>
 
@@ -77,6 +98,11 @@ function submitForm() {
         header="Add Advertisement"
         @update:visible="closeDialog"
     >
+        <!-- Error Message -->
+        <Message v-if="props.error" severity="error" :closable="false" class="mb-3">
+            {{ props.error }}
+        </Message>
+
         <form @submit.prevent="submitForm" class="p-fluid">
             <div class="grid grid-cols-1 gap-4">
                 <!-- Medium -->
@@ -90,62 +116,86 @@ function submitForm() {
                         optionValue="value"
                         placeholder="Select medium"
                         class="w-full"
+                        :class="{ 'p-invalid': !formData.medium }"
                         required
                     />
+                    <small class="p-error" v-if="!formData.medium">Medium is required.</small>
                 </div>
+
                 <!-- Cost -->
                 <div>
                     <label for="cost" class="block text-900 font-semibold mb-2">Cost (TZS) *</label>
-                    <InputText
+                    <InputNumber
                         id="cost"
                         v-model="formData.cost"
+                        mode="decimal"
+                        :min="0"
+                        :maxFractionDigits="2"
                         placeholder="Enter cost"
                         class="w-full"
+                        :class="{ 'p-invalid': !formData.cost || formData.cost <= 0 }"
                         required
                     />
+                    <small class="p-error" v-if="!formData.cost || formData.cost <= 0">Valid cost is required.</small>
                 </div>
 
-                <!-- Date -->
+                <!-- Advert Date -->
                 <div>
-                    <label for="advertDate" class="block text-900 font-semibold mb-2">Date *</label>
+                    <label for="advert_date" class="block text-900 font-semibold mb-2">Advert Date *</label>
                     <Calendar
-                        id="advertDate"
-                        v-model="formData.advertDate"
-                        placeholder="Select date"
+                        id="advert_date"
+                        v-model="formData.advert_date"
+                        :showIcon="true"
+                        :showButtonBar="true"
+                        dateFormat="yy-mm-dd"
+                        placeholder="Select advert date"
                         class="w-full"
+                        :class="{ 'p-invalid': !formData.advert_date }"
                         required
+                    />
+                    <small class="p-error" v-if="!formData.advert_date">Advert date is required.</small>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label for="description" class="block text-900 font-semibold mb-2">Description</label>
+                    <Textarea
+                        id="description"
+                        v-model="formData.description"
+                        rows="3"
+                        placeholder="Enter advert description"
+                        class="w-full"
+                        maxlength="1000"
                     />
                 </div>
 
-                <!-- User -->
+                <!-- Notes -->
                 <div>
-                    <label for="user" class="block text-900 font-semibold mb-2">User *</label>
-                    <Dropdown
-                        id="user"
-                        v-model="formData.user"
-                        :options="userOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="Select user"
+                    <label for="notes" class="block text-900 font-semibold mb-2">Notes</label>
+                    <Textarea
+                        id="notes"
+                        v-model="formData.notes"
+                        rows="2"
+                        placeholder="Enter additional notes"
                         class="w-full"
-                        required
+                        maxlength="500"
                     />
                 </div>
             </div>
 
-            <!-- Form Actions -->
-            <div class="flex justify-content-end gap-2 mt-6">
+            <div class="flex justify-content-end gap-2 mt-4">
                 <Button
                     label="Cancel"
                     icon="pi pi-times"
-                    class="p-button-outlined"
                     @click="closeDialog"
+                    class="p-button-text"
                 />
                 <Button
-                    label="Save Advertisement"
-                    icon="pi pi-save"
+                    label="Submit"
+                    icon="pi pi-check"
                     type="submit"
-                    class="p-button-primary"
+                    :disabled="!isFormValid"
+                    autofocus
                 />
             </div>
         </form>

@@ -1,10 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import RegistrationService from '@/services/RegistrationService.js';
+import StudentService from '@/service/StudentService';
 
 const stats = ref([
     {
-        title: 'Total Admitted',
+        title: 'Admissions',
         value: '0',
         description: 'All admitted students',
         percentage: '100%',
@@ -28,9 +29,17 @@ const stats = ref([
         color: 'orange'
     },
     {
-        title: 'Rejected',
+        title: 'Inactive',
         value: '0',
         description: 'Admission denied',
+        percentage: '0%',
+        icon: 'pi pi-times-circle',
+        color: 'red'
+    },
+    {
+        title: 'Suspended',
+        value: '0',
+        description: 'Suspended Students',
         percentage: '0%',
         icon: 'pi pi-times-circle',
         color: 'red'
@@ -39,19 +48,24 @@ const stats = ref([
 
 onMounted(async () => {
     try {
-        const statsData = await RegistrationService.getAdmissionStats();
+        const statsData = await StudentService.getAdmissionStats();
         const total = statsData.total;
-        
-        stats.value[0].value = statsData.total.toLocaleString();
+
+        stats.value[0].value = statsData.admitted.toLocaleString();
         stats.value[1].value = statsData.enrolled.toLocaleString();
-        stats.value[2].value = statsData.pendingEnrollment.toLocaleString();
-        stats.value[3].value = statsData.rejected.toLocaleString();
-        
+        stats.value[2].value = statsData.notEnrolled.toLocaleString();
+        stats.value[3].value = statsData.inactive.toLocaleString();
+        stats.value[4].value = statsData.suspended.toLocaleString();
+
+
         // Calculate percentages
         stats.value[0].percentage = '100%';
-        stats.value[1].percentage = total > 0 ? Math.round((statsData.enrolled / total) * 100) + '%' : '0%';
-        stats.value[2].percentage = total > 0 ? Math.round((statsData.pendingEnrollment / total) * 100) + '%' : '0%';
-        stats.value[3].percentage = total > 0 ? Math.round((statsData.rejected / total) * 100) + '%' : '0%';
+        stats.value[1].percentage = total > 0 ? Math.round((statsData.admitted / total) * 100) + '%' : '0%';
+        stats.value[2].percentage = total > 0 ? Math.round((statsData.enrolled / total) * 100) + '%' : '0%';
+        stats.value[3].percentage = total > 0 ? Math.round((statsData.notEnrolled / total) * 100) + '%' : '0%';
+        stats.value[4].percentage = total > 0 ? Math.round((statsData.inactive / total) * 100) + '%' : '0%';
+        stats.value[5].percentage = total > 0 ? Math.round((statsData.suspended / total) * 100) + '%' : '0%';
+
     } catch (error) {
         console.error('Failed to load admission stats:', error);
     }
@@ -74,7 +88,7 @@ onMounted(async () => {
                     <div class="flex items-center gap-2 mt-2">
                         <span class="text-xs font-medium" :class="`text-${stat.color}-600`">{{ stat.percentage }}</span>
                         <div class="flex-1 bg-gray-200 rounded-full h-1.5">
-                            <div 
+                            <div
                                 class="h-1.5 rounded-full transition-all duration-500"
                                 :class="`bg-${stat.color}-500`"
                                 :style="{ width: stat.percentage }"

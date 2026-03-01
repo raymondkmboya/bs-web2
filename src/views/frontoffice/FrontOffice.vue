@@ -3,9 +3,17 @@ import { ref, onMounted } from 'vue';
 import VisitorsTable from '@/components/frontoffice/VisitorsTable.vue';
 import PostalTable from '@/components/frontoffice/PostalTable.vue';
 import AppointmentsTable from '@/components/frontoffice/AppointmentsTable.vue';
+import VisitorDialog from '@/components/frontoffice/VisitorDialog.vue';
+import PostalDialog from '@/components/frontoffice/PostalDialog.vue';
+import AppointmentDialog from '@/components/frontoffice/AppointmentDialog.vue';
 
 const activeTab = ref(0);
 const loading = ref(false);
+
+// Dialog states
+const showVisitorDialog = ref(false);
+const showPostalDialog = ref(false);
+const showAppointmentDialog = ref(false);
 
 // Mock data for demonstration
 const visitors = ref([]);
@@ -71,6 +79,71 @@ async function loadAppointments() {
         loading.value = false;
     }
 }
+
+// Dialog functions
+function openVisitorDialog() {
+    showVisitorDialog.value = true;
+}
+
+function openPostalDialog() {
+    showPostalDialog.value = true;
+}
+
+function openAppointmentDialog() {
+    showAppointmentDialog.value = true;
+}
+
+function closeVisitorDialog() {
+    showVisitorDialog.value = false;
+}
+
+function closePostalDialog() {
+    showPostalDialog.value = false;
+}
+
+function closeAppointmentDialog() {
+    showAppointmentDialog.value = false;
+}
+
+// Save handlers
+function saveVisitor(data) {
+    // Add visitor logic here
+    console.log('Saving visitor:', data);
+    visitors.value.push({
+        id: visitors.value.length + 1,
+        ...data,
+        visitDate: new Date().toISOString().split('T')[0],
+        checkIn: new Date().toTimeString().slice(0, 5),
+        checkOut: '',
+        status: 'active'
+    });
+    closeVisitorDialog();
+}
+
+function savePostal(data) {
+    // Add postal item logic here
+    console.log('Saving postal:', data);
+    postal.value.push({
+        id: postal.value.length + 1,
+        ...data,
+        dispatchDate: new Date().toISOString().split('T')[0],
+        dispatchTime: new Date().toTimeString().slice(0, 5),
+        status: 'dispatched'
+    });
+    closePostalDialog();
+}
+
+function saveAppointment(data) {
+    // Add appointment logic here
+    console.log('Saving appointment:', data);
+    appointments.value.push({
+        id: appointments.value.length + 1,
+        ...data,
+        appointmentDate: data.appointmentDate.toISOString().split('T')[0],
+        status: 'scheduled'
+    });
+    closeAppointmentDialog();
+}
 </script>
 
 <template>
@@ -83,14 +156,14 @@ async function loadAppointments() {
         <TabView v-model:activeIndex="activeTab">
             <!-- Visitors Tab -->
             <TabPanel header="Visitor Book">
-                <div class="flex justify-content-between align-items-center mb-4">
+                <div class="flex justify-between items-center mb-4">
                     <div>
                         <h6 class="mb-1">Visitor Management</h6>
                         <span class="text-600 text-sm">Track and manage school visitors with check-in/out records</span>
                     </div>
-                    <Button 
-                        label="Check In Visitor" 
-                        icon="pi pi-plus" 
+                    <Button
+                        label="Check In Visitor"
+                        icon="pi pi-plus"
                         @click="openVisitorDialog()"
                         class="p-button-outlined"
                         size="small"
@@ -105,14 +178,14 @@ async function loadAppointments() {
 
             <!-- Postal Dispatch Tab -->
             <TabPanel header="Postal Dispatch">
-                <div class="flex justify-content-between align-items-center mb-4">
+                <div class="flex justify-between items-center mb-4">
                     <div>
                         <h6 class="mb-1">Postal Management</h6>
                         <span class="text-600 text-sm">Manage incoming and outgoing mail and packages</span>
                     </div>
-                    <Button 
-                        label="Add Postal Item" 
-                        icon="pi pi-plus" 
+                    <Button
+                        label="Add Postal Item"
+                        icon="pi pi-plus"
                         @click="openPostalDialog()"
                         class="p-button-outlined"
                         size="small"
@@ -127,14 +200,14 @@ async function loadAppointments() {
 
             <!-- Appointments Tab -->
             <TabPanel header="Appointments">
-                <div class="flex justify-content-between align-items-center mb-4">
+                <div class="flex justify-between items-center mb-4">
                     <div>
                         <h6 class="mb-1">Appointment Scheduling</h6>
                         <span class="text-600 text-sm">Manage and track scheduled appointments and meetings</span>
                     </div>
-                    <Button 
-                        label="Schedule Appointment" 
-                        icon="pi pi-plus" 
+                    <Button
+                        label="Schedule Appointment"
+                        icon="pi pi-plus"
                         @click="openAppointmentDialog()"
                         class="p-button-outlined"
                         size="small"
@@ -148,4 +221,22 @@ async function loadAppointments() {
             </TabPanel>
         </TabView>
     </div>
+
+    <!-- Visitor Dialog -->
+    <VisitorDialog
+        v-model:visible="showVisitorDialog"
+        @save="saveVisitor"
+    />
+
+    <!-- Postal Dialog -->
+    <PostalDialog
+        v-model:visible="showPostalDialog"
+        @save="savePostal"
+    />
+
+    <!-- Appointment Dialog -->
+    <AppointmentDialog
+        v-model:visible="showAppointmentDialog"
+        @save="saveAppointment"
+    />
 </template>

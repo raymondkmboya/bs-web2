@@ -31,10 +31,10 @@ function formatTime(timeString) {
 </script>
 
 <template>
-    <DataTable 
-        :value="visitors" 
-        :paginator="true" 
-        :rows="10" 
+    <DataTable
+        :value="visitors"
+        :paginator="true"
+        :rows="10"
         dataKey="id"
         :loading="loading"
         responsiveLayout="scroll"
@@ -42,12 +42,12 @@ function formatTime(timeString) {
         showGridlines
     >
         <template #header>
-            <div class="flex justify-content-between">
-                <Button 
-                    type="button" 
-                    icon="pi pi-filter-slash" 
-                    label="Clear Filters" 
-                    class="p-button-outlined" 
+            <div class="flex justify-between items-center">
+                <Button
+                    type="button"
+                    icon="pi pi-filter-slash"
+                    label="Clear Filters"
+                    class="p-button-outlined"
                     size="small"
                 />
                 <span class="p-input-icon-left">
@@ -125,8 +125,8 @@ function formatTime(timeString) {
 
         <Column field="status" header="Status" sortable>
             <template #body="{ data }">
-                <Tag 
-                    :value="data.status.toUpperCase()" 
+                <Tag
+                    :value="data.status.toUpperCase()"
                     :severity="getStatusSeverity(data.status)"
                 />
             </template>
@@ -134,22 +134,22 @@ function formatTime(timeString) {
 
         <Column header="Actions" :exportable="false" style="min-width: 10rem">
             <template #body="{ data }">
-                <Button 
-                    icon="pi pi-pencil" 
-                    class="p-button-rounded p-button-text mr-2" 
+                <Button
+                    icon="pi pi-pencil"
+                    class="p-button-rounded p-button-text mr-2"
                     @click="$emit('edit-visitor', data)"
                     v-tooltip="'Edit Visitor'"
                 />
-                <Button 
+                <Button
                     v-if="data.status === 'active'"
-                    icon="pi pi-sign-out" 
-                    class="p-button-rounded p-button-text p-button-success mr-2" 
+                    icon="pi pi-sign-out"
+                    class="p-button-rounded p-button-text p-button-success mr-2"
                     @click="$emit('check-out', data)"
                     v-tooltip="'Check Out'"
                 />
-                <Button 
-                    icon="pi pi-trash" 
-                    class="p-button-rounded p-button-text p-button-danger" 
+                <Button
+                    icon="pi pi-trash"
+                    class="p-button-rounded p-button-text p-button-danger"
                     @click="$emit('delete-visitor', data)"
                     v-tooltip="'Delete Visitor'"
                 />

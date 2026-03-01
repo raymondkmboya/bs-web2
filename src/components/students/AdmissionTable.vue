@@ -20,10 +20,9 @@ const router = useRouter();
 const filters = ref({
     global: { value: null, matchMode: 'contains' },
     name: { value: null, matchMode: 'contains' },
-    email: { value: null, matchMode: 'contains' },
     phone: { value: null, matchMode: 'contains' },
     gender: { value: null, matchMode: 'equals' },
-    appliedClass: { value: null, matchMode: 'equals' },
+    classLevelAndStream: { value: null, matchMode: 'contains' },
     status: { value: null, matchMode: 'equals' },
     admissionDate: { value: null, matchMode: 'contains' }
 });
@@ -41,23 +40,13 @@ const genderOptions = [
     { label: 'Female', value: 'Female' }
 ];
 
-const classOptions = [
-    { label: 'Form 1', value: 'Form 1' },
-    { label: 'Form 2', value: 'Form 2' },
-    { label: 'Form 3', value: 'Form 3' },
-    { label: 'Form 4', value: 'Form 4' },
-    { label: 'Form 5', value: 'Form 5' },
-    { label: 'Form 6', value: 'Form 6' }
-];
-
 function clearFilter() {
     filters.value = {
         global: { value: null, matchMode: 'contains' },
         name: { value: null, matchMode: 'contains' },
-        email: { value: null, matchMode: 'contains' },
         phone: { value: null, matchMode: 'contains' },
         gender: { value: null, matchMode: 'equals' },
-        appliedClass: { value: null, matchMode: 'equals' },
+        classLevelAndStream: { value: null, matchMode: 'contains' },
         status: { value: null, matchMode: 'equals' },
         admissionDate: { value: null, matchMode: 'contains' }
     };
@@ -109,7 +98,7 @@ function formatDate(dateString) {
         v-model:filters="filters"
         filterDisplay="menu"
         :loading="loading"
-        :globalFilterFields="['name', 'email', 'phone', 'status', 'admissionDate', 'gender', 'appliedClass']"
+        :globalFilterFields="['name', 'phone', 'status', 'admissionDate', 'gender', 'classLevelAndStream']"
         showGridlines
         responsiveLayout="scroll"
         :paginatorTemplate="'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown'"
@@ -142,6 +131,9 @@ function formatDate(dateString) {
         <template #loading> Loading admissions data. Please wait. </template>
 
         <Column field="name" header="Name" :sortable="true" filterMatchMode="contains">
+            <template #body="{ data }">
+                {{ data.first_name }} {{ data.middle_name }} {{ data.last_name }}
+            </template>
             <template #filter="{ filterModel, filterCallback }">
                 <InputText
                     type="text"
@@ -149,18 +141,6 @@ function formatDate(dateString) {
                     @keydown.enter="filterCallback()"
                     class="p-column-filter"
                     placeholder="Search by name"
-                />
-            </template>
-        </Column>
-
-        <Column field="email" header="Email" :sortable="true" filterMatchMode="contains">
-            <template #filter="{ filterModel, filterCallback }">
-                <InputText
-                    type="text"
-                    v-model="filterModel.value"
-                    @keydown.enter="filterCallback()"
-                    class="p-column-filter"
-                    placeholder="Search by email"
                 />
             </template>
         </Column>
@@ -192,17 +172,17 @@ function formatDate(dateString) {
             </template>
         </Column>
 
-        <Column field="appliedClass" header="Applied Class" :sortable="true" filterMatchMode="equals">
+        <Column field="classLevelAndStream" header="Class Level & Stream" :sortable="true" filterMatchMode="contains">
+            <template #body="{ data }">
+                {{ data.class_level?.class_level_name }} - {{ data.class_level_stream?.class_level_stream_name }}
+            </template>
             <template #filter="{ filterModel, filterCallback }">
-                <Dropdown
+                <InputText
+                    type="text"
                     v-model="filterModel.value"
-                    @change="filterCallback()"
-                    :options="classOptions"
-                    optionValue="value"
-                    optionLabel="label"
-                    placeholder="Any Class"
+                    @keydown.enter="filterCallback()"
                     class="p-column-filter"
-                    showClear
+                    placeholder="Search class or stream"
                 />
             </template>
         </Column>
@@ -236,7 +216,7 @@ function formatDate(dateString) {
                 />
             </template>
             <template #body="{ data }">
-                {{ formatDate(data.admissionDate) }}
+                {{ formatDate(data.admission_date) }}
             </template>
         </Column>
 

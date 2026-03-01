@@ -1,6 +1,7 @@
 import AppLayout from '@/layout/AppLayout.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import axios from 'axios';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -114,6 +115,11 @@ const router = createRouter({
                     component: () => import('@/views/students/Registration.vue')
                 },
                 {
+                    path: '/students/follow-up',
+                    name: 'student-follow-up',
+                    component: () => import('@/views/students/FollowUpDashboard.vue')
+                },
+                {
                     path: '/students/admission',
                     name: 'student-admission',
                     component: () => import('@/views/students/Admission.vue')
@@ -194,11 +200,6 @@ const router = createRouter({
                     component: () => import('@/views/students/Attendance.vue')
                 },
                 {
-                    path: '/students/register',
-                    name: 'students-register',
-                    component: () => import('@/views/students/Register.vue')
-                },
-                {
                     path: '/compass',
                     redirect: '/academics/class-management'
                 },
@@ -256,12 +257,28 @@ router.beforeEach(async (to, from, next) => {
             next();
         } else {
             // Try to initialize auth from localStorage
-            await authStore.initAuth();
+            const token = localStorage.getItem('token');
+            if (token) {
+                // Set token and try to fetch user
+                authStore.token = token;
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-            // Check again after initialization
-            if (authStore.isLoggedIn) {
+                // Try to fetch user but handle gracefully
+                try {
+                    await authStore.fetchUser();
+                    if (authStore.isLoggedIn) {
+                        next();
+                        return;
+                    }
+                } catch (error) {
+                    // Silently fail, keep token for now
+                    console.warn('Auth fetch failed, but keeping token:', error);
+                }
+
+                // Even if fetch failed, proceed with token-based auth
                 next();
             } else {
+                // No token, redirect to login
                 next('/auth/login');
             }
         }

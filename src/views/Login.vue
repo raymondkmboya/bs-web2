@@ -67,8 +67,8 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const form = ref({
-  email: 'test@example.com',
-  password: 'password'
+  email: 'jovina@example.com',
+  password: 'test@123'
 })
 
 const loading = ref(false)

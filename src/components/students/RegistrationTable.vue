@@ -12,18 +12,16 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['view', 'edit', 'followUp']);
+const emit = defineEmits(['view', 'edit', 'followUp', 'admit']);
 
 // Filters
 const filters = ref({
     global: { value: null, matchMode: 'contains' },
     name: { value: null, matchMode: 'contains' },
-    email: { value: null, matchMode: 'contains' },
     phone: { value: null, matchMode: 'contains' },
     gender: { value: null, matchMode: 'equals' },
-    appliedClass: { value: null, matchMode: 'equals' },
     status: { value: null, matchMode: 'equals' },
-    registrationDate: { value: null, matchMode: 'contains' }
+    registration_date: { value: null, matchMode: 'contains' }
 });
 
 // Status options
@@ -53,12 +51,10 @@ function clearFilter() {
     filters.value = {
         global: { value: null, matchMode: 'contains' },
         name: { value: null, matchMode: 'contains' },
-        email: { value: null, matchMode: 'contains' },
         phone: { value: null, matchMode: 'contains' },
         gender: { value: null, matchMode: 'equals' },
-        appliedClass: { value: null, matchMode: 'equals' },
         status: { value: null, matchMode: 'equals' },
-        registrationDate: { value: null, matchMode: 'contains' }
+        registration_date: { value: null, matchMode: 'contains' }
     };
 }
 
@@ -89,6 +85,17 @@ function handleFollowUp(data) {
     emit('followUp', data);
 }
 
+function handlePrintRegistration(data) {
+    // Open the backend registration form URL using environment variable
+    const apiUrl = `${import.meta.env.VITE_API_URL}/students/${data.id}/print-registration-form`;
+
+    window.open(apiUrl, '_blank', 'width=1000,height=800,scrollbars=yes,resizable=yes');
+}
+
+function handleAdmit(data) {
+    emit('admit', data);
+}
+
 function formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -106,7 +113,7 @@ function formatDate(dateString) {
         v-model:filters="filters"
         filterDisplay="menu"
         :loading="loading"
-        :globalFilterFields="['name', 'email', 'phone', 'status', 'registrationDate', 'gender', 'appliedClass']"
+        :globalFilterFields="['first_name', 'middle_name', 'last_name', 'phone', 'gender', 'status', 'registration_date', 'parent.parent_name', 'parent.parent_phone', 'class_level.class_level_name']"
         showGridlines
         responsiveLayout="scroll"
         :paginatorTemplate="'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown'"
@@ -138,7 +145,10 @@ function formatDate(dateString) {
         <template #empty> No registrations found. </template>
         <template #loading> Loading registrations data. Please wait. </template>
 
-        <Column field="name" header="Name" :sortable="true" filterMatchMode="contains">
+        <Column field="first_name" header="Name" :sortable="true" filterMatchMode="contains">
+            <template #body="{ data }">
+                {{ data.first_name }} {{ data.middle_name }} {{ data.last_name }}
+            </template>
             <template #filter="{ filterModel, filterCallback }">
                 <InputText
                     type="text"
@@ -146,18 +156,6 @@ function formatDate(dateString) {
                     @keydown.enter="filterCallback()"
                     class="p-column-filter"
                     placeholder="Search by name"
-                />
-            </template>
-        </Column>
-
-        <Column field="email" header="Email" :sortable="true" filterMatchMode="contains">
-            <template #filter="{ filterModel, filterCallback }">
-                <InputText
-                    type="text"
-                    v-model="filterModel.value"
-                    @keydown.enter="filterCallback()"
-                    class="p-column-filter"
-                    placeholder="Search by email"
                 />
             </template>
         </Column>
@@ -189,17 +187,38 @@ function formatDate(dateString) {
             </template>
         </Column>
 
-        <Column field="appliedClass" header="Applied Class" :sortable="true" filterMatchMode="equals">
+        <Column field="class_level.class_level_name" header="Class Level" :sortable="true" filterMatchMode="contains">
             <template #filter="{ filterModel, filterCallback }">
-                <Dropdown
+                <InputText
+                    type="text"
                     v-model="filterModel.value"
-                    @change="filterCallback()"
-                    :options="classOptions"
-                    optionValue="value"
-                    optionLabel="label"
-                    placeholder="Any Class"
+                    @keydown.enter="filterCallback()"
                     class="p-column-filter"
-                    showClear
+                    placeholder="Search by class level"
+                />
+            </template>
+        </Column>
+
+        <Column field="parent.parent_name" header="Parent Name" :sortable="true" filterMatchMode="contains">
+            <template #filter="{ filterModel, filterCallback }">
+                <InputText
+                    type="text"
+                    v-model="filterModel.value"
+                    @keydown.enter="filterCallback()"
+                    class="p-column-filter"
+                    placeholder="Search by parent name"
+                />
+            </template>
+        </Column>
+
+        <Column field="parent.parent_phone" header="Parent Phone" :sortable="true" filterMatchMode="contains">
+            <template #filter="{ filterModel, filterCallback }">
+                <InputText
+                    type="text"
+                    v-model="filterModel.value"
+                    @keydown.enter="filterCallback()"
+                    class="p-column-filter"
+                    placeholder="Search by parent phone"
                 />
             </template>
         </Column>
@@ -222,7 +241,7 @@ function formatDate(dateString) {
             </template>
         </Column>
 
-        <Column field="registrationDate" header="Registration Date" :sortable="true" filterMatchMode="contains">
+        <Column field="registration_date" header="Registration Date" :sortable="true" filterMatchMode="contains">
             <template #filter="{ filterModel, filterCallback }">
                 <InputText
                     type="text"
@@ -233,11 +252,11 @@ function formatDate(dateString) {
                 />
             </template>
             <template #body="{ data }">
-                {{ formatDate(data.registrationDate) }}
+                {{ formatDate(data.registration_date) }}
             </template>
         </Column>
 
-        <Column header="Actions" style="min-width: 120px">
+        <Column header="Actions" style="min-width: 200px">
             <template #body="{ data }">
                 <Button
                     icon="pi pi-eye"
@@ -256,6 +275,19 @@ function formatDate(dateString) {
                     class="p-button-rounded p-button-text p-button-plain"
                     v-tooltip="'Follow Up'"
                     @click="handleFollowUp(data)"
+                />
+                <Button
+                    icon="pi pi-print"
+                    class="p-button-rounded p-button-text p-button-plain"
+                    v-tooltip="'Print Registration Form'"
+                    @click="handlePrintRegistration(data)"
+                />
+                <Button
+                    icon="pi pi-check"
+                    class="p-button-rounded p-button-text p-button-plain p-button-success"
+                    v-tooltip="'Admit Student'"
+                    @click="handleAdmit(data)"
+                    v-if="data.status === 'registered'"
                 />
             </template>
         </Column>
